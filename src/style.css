@@ -1770,11 +1770,20 @@ body.modal-open {
   color: var(--text);
   cursor: pointer;
   opacity: 0.6;
+  /* Trước đây nút này chỉ ôm lấy ký tự "✕" nên chỉ 23x19px,
+     quá nhỏ để bấm trên điện thoại. */
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  font-size: 15px;
 }
 
 .cart-remove:hover {
   color: var(--brand);
   opacity: 1;
+  background: var(--brand-soft);
 }
 
 .cart-foot,
@@ -1944,5 +1953,425 @@ body.modal-open {
   from {
     opacity: 0;
     transform: translate(-50%, 12px);
+  }
+}
+
+/* =======================================================
+   RESPONSIVE HOÀN CHỈNH — điện thoại / tablet / máy tính
+   Đặt cuối file để đè lên các breakpoint rời rạc ở trên.
+   Mốc: 1080px (máy tính nhỏ) · 900px (tablet ngang)
+        760px (tablet dọc) · 600px (điện thoại lớn) · 420px (điện thoại nhỏ)
+   ======================================================= */
+
+/* Ngăn tràn ngang do chữ dài / email / mã đơn */
+.dish,
+.cart-line-main,
+.sheet-body p,
+.footer-grid p,
+.about-grid p {
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ----- Máy tính nhỏ & tablet ngang (≤1080px) ----- */
+@media (max-width: 1080px) {
+  .header-inner {
+    gap: 16px;
+  }
+
+  .main-nav {
+    gap: 20px;
+  }
+
+  /* Header bắt đầu vỡ: cho phép xuống hàng thay vì bóp chữ */
+  .header-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .search-box {
+    min-width: 150px;
+  }
+}
+
+/* ----- Tablet (≤900px) ----- */
+@media (max-width: 900px) {
+  .container {
+    padding-inline: 20px;
+  }
+
+  h1 {
+    font-size: 40px;
+  }
+
+  h2 {
+    font-size: 30px;
+  }
+
+  .hero-grid,
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .hero {
+    padding: 52px 0 44px;
+  }
+
+  .hero-art {
+    min-height: 320px;
+  }
+
+  .features-grid,
+  .dish-grid,
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .footer-grid {
+    gap: 28px;
+  }
+}
+
+/* ----- Tablet dọc & điện thoại lớn (≤760px) ----- */
+@media (max-width: 760px) {
+  /* Header xuống 3 hàng: logo + nút | ô tìm kiếm | menu cuộn ngang */
+  .header-inner {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-block: 8px;
+    min-height: 0;
+  }
+
+  /* Header dính chiếm 26% màn hình điện thoại nếu giữ độ cao cũ,
+     nên thu gọn lại cho vừa chừa chỗ xem món ăn. */
+  .brand-mark {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .brand-name {
+    font-size: 16px;
+  }
+
+  .header-actions {
+    order: 2;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  /* Ô tìm kiếm chiếm trọn một hàng riêng */
+  .search-box {
+    order: -1;
+    flex: 1 0 100%;
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* Menu 4 mục nằm trong một hàng cuộn ngang,
+     tránh bị bóp chữ hoặc tràn ra ngoài màn hình hẹp */
+  .main-nav {
+    order: 3;
+    width: 100%;
+    gap: 22px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+  }
+
+  .main-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .main-nav a {
+    white-space: nowrap;
+    padding-block: 4px;
+  }
+
+  /* Giữ nút tài khoản trong header. Trước đây nó bị ẩn ở ≤640px,
+     làm người dùng điện thoại không đăng xuất được và
+     không vào được trang quản trị. */
+  .header-actions .btn-login {
+    display: inline-flex;
+  }
+
+  .header-actions .btn {
+    padding-inline: 13px;
+    font-size: 14px;
+  }
+
+  .header-actions .btn-admin {
+    display: none;
+  }
+
+  .brand-name {
+    font-size: 18px;
+  }
+
+  .auth-modal {
+    grid-template-columns: 1fr;
+    max-width: 520px;
+  }
+
+  .auth-image {
+    display: none;
+  }
+}
+
+/* ----- Điện thoại (≤600px) ----- */
+@media (max-width: 600px) {
+  .container {
+    padding-inline: 16px;
+  }
+
+  h1 {
+    font-size: 34px;
+  }
+
+  h2 {
+    font-size: 25px;
+  }
+
+  h3 {
+    font-size: 18px;
+  }
+
+  .hero {
+    padding: 40px 0 36px;
+  }
+
+  .hero-sub {
+    font-size: 16px;
+    margin: 16px 0 22px;
+  }
+
+  .hero-art {
+    min-height: 260px;
+  }
+
+  .hero-actions .btn {
+    flex: 1 1 100%;
+  }
+
+  /* Bỏ hàng menu khỏi header điện thoại.
+     Cả 4 liên kết và mục "Trang quản trị" đã có trong footer,
+     nên không mất gì mà header bớt cao ~46px. */
+  .main-nav {
+    display: none;
+  }
+
+  /* Một cột cho dễ đọc và dễ bấm */
+  .features-grid,
+  .dish-grid,
+  .footer-grid,
+  .about-art {
+    grid-template-columns: 1fr;
+  }
+
+  .dish-art img {
+    height: 200px;
+  }
+
+  .about-photo {
+    min-height: 230px;
+  }
+
+  .promo-inner {
+    flex-direction: column;
+    text-align: center;
+    padding: 32px 22px;
+  }
+
+  .promo-art {
+    width: 110px;
+    height: 110px;
+  }
+
+  .promo-art span {
+    font-size: 34px;
+  }
+
+  .promo-content h2 {
+    font-size: 25px;
+  }
+
+  .category-filter {
+    gap: 8px;
+    margin: 20px 0 26px;
+    /* Cuộn ngang thay vì xuống hàng quá nhiều.
+       min-width: 0 là bắt buộc: đây là flex item, mặc định
+       min-width:auto khiến nó giữ nguyên bề rộng nội dung
+       và làm tràn ngang cả trang. */
+    min-width: 0;
+    max-width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .category-filter::-webkit-scrollbar {
+    display: none;
+  }
+
+  .category-btn {
+    flex: 0 0 auto;
+    padding: 9px 15px;
+    font-size: 14px;
+  }
+
+  /* Giỏ hàng: xuống 2 hàng cho từng món thay vì 5 cột bị bóp */
+  .cart-line {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      'art info remove'
+      'art qty  price';
+    gap: 6px 10px;
+    padding: 16px 0;
+  }
+
+  .cart-line-art {
+    grid-area: art;
+  }
+
+  .cart-line-main {
+    grid-area: info;
+  }
+
+  .cart-line .qty {
+    grid-area: qty;
+    justify-self: start;
+  }
+
+  .cart-line-total {
+    grid-area: price;
+    align-self: center;
+    text-align: right;
+  }
+
+  .cart-remove {
+    grid-area: remove;
+  }
+
+  .cart-head,
+  .sheet-head {
+    padding: 14px 16px;
+  }
+
+  .cart-body,
+  .sheet-body {
+    padding-inline: 16px;
+  }
+
+  .cart-drawer {
+    width: 100%;
+  }
+
+  .sheet-foot {
+    padding: 16px;
+  }
+
+  .sheet-foot .btn {
+    flex: 1 1 100%;
+  }
+
+  .toast {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    transform: none;
+    text-align: center;
+  }
+}
+
+/* ----- Điện thoại nhỏ (≤420px) ----- */
+@media (max-width: 420px) {
+  .container {
+    padding-inline: 14px;
+  }
+
+  h1 {
+    font-size: 29px;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+
+  .brand-name {
+    font-size: 16px;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+  }
+
+  .header-actions .btn {
+    padding-inline: 11px;
+    font-size: 13.5px;
+  }
+
+  .cart-line {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      'art  info'
+      'qty  price'
+      'remove remove';
+  }
+
+  .cart-remove {
+    justify-self: end;
+  }
+}
+
+/* ----- Vùng chạm trên thiết bị cảm ứng: mục tiêu tối thiểu 44px ----- */
+@media (pointer: coarse) {
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .qty-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 19px;
+  }
+
+  .qty span {
+    min-width: 32px;
+  }
+
+  .search-clear {
+    width: 32px;
+    height: 32px;
+  }
+
+  .cart-remove {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Các phần tử sau đây thấp hơn 40px nên khó bấm trên điện thoại */
+  .btn,
+  .category-btn,
+  .brand,
+  .main-nav a,
+  .footer-grid a,
+  .search-box {
+    min-height: 44px;
+  }
+
+  .main-nav a,
+  .footer-grid a {
+    display: inline-flex;
+    align-items: center;
   }
 }
