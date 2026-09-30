@@ -2,6 +2,7 @@ import './style.css'
 import * as db from './store.js'
 import * as cart from './cart.js'
 import * as auth from './auth.js'
+import { filterDishes } from './search.js'
 
 const $ = (sel) => document.querySelector(sel)
 const money = (n) => `${Number(n || 0).toLocaleString('vi-VN')}đ`
@@ -35,6 +36,18 @@ const shell = () => `
     </nav>
 
     <div class="header-actions">
+      <div class="search-box">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input
+          type="search"
+          id="dishSearch"
+          placeholder="Tìm món ăn..."
+          aria-label="Tìm món ăn"
+          autocomplete="off"
+        />
+        <button type="button" class="search-clear" id="searchClear" aria-label="Xoá từ khoá" hidden>✕</button>
+      </div>
+
       <button class="btn btn-outline btn-login" data-auth="login">
         Đăng nhập
       </button>
@@ -146,7 +159,10 @@ const shell = () => `
       <p>Những món ăn được khách hàng của chúng tôi lựa chọn nhiều nhất.</p>
     </div>
 
-    <div class="category-filter" id="categoryFilter"></div>
+    <div class="menu-toolbar">
+      <div class="category-filter" id="categoryFilter"></div>
+      <p class="result-count" id="resultCount" role="status" aria-live="polite"></p>
+    </div>
 
     <div class="dish-grid" id="dishGrid"></div>
   </div>
@@ -241,6 +257,9 @@ app.innerHTML = shell()
 
 const dishGrid = $('#dishGrid')
 const filterBox = $('#categoryFilter')
+const searchInput = $('#dishSearch')
+const searchClear = $('#searchClear')
+const resultCount = $('#resultCount')
 
 const state = { category: 'all' }
 
@@ -288,18 +307,38 @@ const renderCategories = () => {
   ].join('')
 }
 
+const dishName = (id) => db.CATEGORIES.find((c) => c.id === id)?.name ?? ''
+
 const renderDishes = () => {
   const all = db.listDishes()
-  const rows =
-    state.category === 'all' ? all : all.filter((dish) => dish.category === state.category)
+  const rows = filterDishes(
+    all,
+    { category: state.category, query: state.query },
+    db.CATEGORIES,
+  )
 
   dishGrid.innerHTML = rows.length
     ? rows.map(dishCard).join('')
-    : '<p class="muted">Không có món nào khớp bộ lọc.</p>'
+    : `<p class="muted empty-state">
+         Không tìm thấy món nào${state.query.trim() ? ` cho "<b>${escape(state.query)}</b>"` : ''}.
+         <button type="button" class="btn btn-ghost btn-sm" data-action="reset-filter">Xem tất cả</button>
+       </p>`
 
   filterBox.querySelectorAll('.category-btn').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.category === state.category)
   })
+
+  const scope = state.category === 'all' ? 'món' : dishName(state.category)
+  resultCount.textContent = `Hiển thị ${rows.length}/${all.length} ${scope}`
+  resultCount.classList.toggle('is-empty', rows.length === 0)
+  searchClear.hidden = !state.query
+}
+
+const resetFilter = () => {
+  state.query = ''
+  state.category = 'all'
+  searchInput.value = ''
+  renderDishes()
 }
 
 /* =========================
@@ -331,59 +370,75 @@ const closePanels = () => {
   lastFocused = null
 }
 
+const lineArt = (line) =>
+  line.image
+    ? `<img class="cart-line-art" src="${escape(line.image)}" alt="" loading="lazy" />`
+    : `<span class="cart-line-art is-emoji">${escape(line.emoji ?? '🍽️')}</span>`
+
 const cartRows = () =>
   cart
     .list()
     .map(
       (line) => `
       <div class="cart-line" data-key="${escape(line.key)}">
+        ${lineArt(line)}
         <div class="cart-line-main">
           <strong>${escape(line.name)}</strong>
-          <small>${money(line.price)}</small>
+          <small>${money(line.price)} / món</small>
         </div>
         <div class="qty">
-          <button type="button" class="qty-btn" data-qty="-1" data-key="${escape(line.key)}">−</button>
+          <button type="button" class="qty-btn" data-qty="-1" data-key="${escape(line.key)}" aria-label="Giảm số lượng ${escape(line.name)}">−</button>
           <span>${line.qty}</span>
-          <button type="button" class="qty-btn" data-qty="1" data-key="${escape(line.key)}">+</button>
+          <button type="button" class="qty-btn" data-qty="1" data-key="${escape(line.key)}" aria-label="Tăng số lượng ${escape(line.name)}">+</button>
         </div>
         <span class="cart-line-total">${money(line.price * line.qty)}</span>
-        <button type="button" class="cart-remove" data-remove="${escape(line.key)}">✕</button>
+        <button type="button" class="cart-remove" data-remove="${escape(line.key)}" aria-label="Xoá ${escape(line.name)}">✕</button>
       </div>`,
     )
     .join('')
 
+const shipProgress = () => {
+  const sub = cart.subtotal()
+  if (sub <= 0) return ''
+  const pct = Math.min(100, Math.round((sub / db.FREE_SHIP_FROM) * 100))
+  const missing = cart.missingForFreeShip()
+  return `
+    <div class="ship-progress">
+      <div class="ship-bar"><span style="width:${pct}%"></span></div>
+      <p class="ship-text">${
+        missing > 0
+          ? `Mua thêm <b>${money(missing)}</b> để được miễn phí giao`
+          : '🎉 Đơn hàng này được <b>miễn phí giao</b>'
+      }</p>
+    </div>`
+}
+
 const openCart = () => {
   lastFocused = document.activeElement
   const lines = cart.list()
-  const missing = cart.missingForFreeShip()
   ui.innerHTML = `
     <div class="drawer-backdrop" data-close="1"></div>
     <aside class="cart-drawer" role="dialog" aria-modal="true" aria-label="Giỏ hàng">
       <header class="cart-head">
-        <h2>Giỏ hàng</h2>
+        <h2>Giỏ hàng ${lines.length ? `<small>${cart.count()} món</small>` : ''}</h2>
         <button type="button" class="icon-btn" data-close="1" aria-label="Đóng">✕</button>
       </header>
       <div class="cart-body">
-        ${
-          lines.length
-            ? cartRows()
-            : '<p class="muted">Giỏ hàng đang trống. Hãy chọn vài món ngon nhé.</p>'
-        }
+        ${lines.length ? cartRows() : ''}
       </div>
       <footer class="cart-foot">
-        <div class="cart-sum"><span>Tạm tính</span><b>${money(cart.subtotal())}</b></div>
-        <div class="cart-sum"><span>Giao hàng</span><b>${
-          cart.shipping() ? money(cart.shipping()) : 'Miễn phí'
-        }</b></div>
-        ${missing > 0 ? `<p class="cart-hint">Mua thêm ${money(missing)} để được miễn phí giao</p>` : ''}
-        <div class="cart-sum is-total"><span>Tổng cộng</span><b>${money(cart.total())}</b></div>
-        <button type="button" class="btn btn-primary btn-block" data-action="checkout" ${
-          lines.length ? '' : 'disabled'
-        }>Thanh toán</button>
+        ${shipProgress()}
         ${
           lines.length
-            ? '<button type="button" class="btn btn-ghost btn-block" data-action="clear-cart">Xoá giỏ</button>'
-            : ''
+            ? `<div class="cart-sum"><span>Tạm tính</span><b>${money(cart.subtotal())}</b></div>
+               <div class="cart-sum"><span>Giao hàng</span><b>${
+                 cart.shipping() ? money(cart.shipping()) : 'Miễn phí'
+               }</b></div>
+               <div class="cart-sum is-total"><span>Tổng cộng</span><b>${money(cart.total())}</b></div>
+               <button type="button" class="btn btn-primary btn-block" data-action="checkout">Thanh toán</button>
+               <button type="button" class="btn btn-ghost btn-block" data-action="clear-cart">Xoá giỏ</button>`
+            : `<p class="cart-empty">Giỏ hàng đang trống.</p>
+               <button type="button" class="btn btn-primary btn-block" data-action="browse-menu">Xem thực đơn</button>`
         }
       </footer>
     </aside>`
@@ -528,6 +583,15 @@ const syncLoginButton = () => {
 ========================= */
 
 document.addEventListener('click', (event) => {
+  if (event.target.closest('#searchClear')) {
+    event.preventDefault()
+    state.query = ''
+    searchInput.value = ''
+    renderDishes()
+    searchInput.focus()
+    return undefined
+  }
+
   const addBtn = event.target.closest('[data-add]')
   if (addBtn) {
     const result = cart.add(addBtn.dataset.add, 1)
@@ -568,6 +632,11 @@ document.addEventListener('click', (event) => {
       renderBadge()
       return openCart()
     }
+    if (action === 'browse-menu') {
+      closePanels()
+      document.querySelector('#menu')?.scrollIntoView({ behavior: 'smooth' })
+      return undefined
+    }
     if (action === 'logout') {
       auth.logout()
       syncLoginButton()
@@ -576,8 +645,7 @@ document.addEventListener('click', (event) => {
     }
   }
 
-  const closeBtn = event.target.closest('[data-close]')
-  if (closeBtn) return closePanels()
+  if (event.target.closest('[data-close]')) return closePanels()
 
   const categoryBtn = event.target.closest('.category-btn')
   if (categoryBtn) {
@@ -585,7 +653,14 @@ document.addEventListener('click', (event) => {
     return renderDishes()
   }
 
+  if (event.target.closest('[data-action="reset-filter"]')) return resetFilter()
+
   return undefined
+})
+
+searchInput.addEventListener('input', () => {
+  state.query = searchInput.value
+  renderDishes()
 })
 
 ui.addEventListener('submit', async (event) => {
@@ -648,8 +723,26 @@ ui.addEventListener('submit', async (event) => {
 })
 
 document.addEventListener('keydown', (event) => {
+  /* Gõ trực tiếp vào ô tìm kiếm mà không cần click chuột. */
+  if (
+    event.key === '/' &&
+    !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName ?? '')
+  ) {
+    event.preventDefault()
+    searchInput.focus()
+    searchInput.select()
+    return
+  }
+
   if (event.key !== 'Escape') return
-  if (ui.innerHTML) closePanels()
+  if (ui.innerHTML) {
+    closePanels()
+    return
+  }
+  if (state.query) {
+    resetFilter()
+    searchInput.focus()
+  }
 })
 
 /* =========================

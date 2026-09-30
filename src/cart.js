@@ -30,7 +30,14 @@ const rebuild = () =>
       const dish = db.findDish(line.key)
       if (!dish || dish.status === 'unavailable') return null
       const qty = Math.min(MAX_QTY, Math.max(1, Math.floor(Number(line.qty) || 1)))
-      return { key: dish.code, name: dish.name, price: dish.price, qty, image: dish.image }
+      return {
+        key: dish.code,
+        name: dish.name,
+        price: dish.price,
+        qty,
+        image: dish.image,
+        emoji: dish.emoji,
+      }
     })
     .filter(Boolean)
 

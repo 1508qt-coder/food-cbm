@@ -1404,6 +1404,123 @@ body.modal-open {
   gap: 8px;
 }
 
+/* =========================================
+   TIM KIEM MON AN
+========================================= */
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 210px;
+}
+
+.search-box .search-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 14px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 34px 10px 34px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+}
+
+.search-box input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.search-box input:focus {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+
+.search-clear {
+  position: absolute;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.search-clear:hover {
+  background: var(--brand);
+  color: #fff;
+}
+
+.menu-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.result-count {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text);
+  opacity: 0.8;
+}
+
+.result-count.is-empty {
+  color: var(--brand-dark);
+  font-weight: 700;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+@media (max-width: 960px) {
+  .search-box {
+    min-width: 170px;
+  }
+
+  .menu-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .result-count {
+    text-align: center;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Ô tìm kiếm chiếm nguyên hàng trên điện thoại, tránh bóp chữ header. */
+  .search-box {
+    order: -1;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
+  }
+}
+
 .cart-badge {
   display: inline-flex;
   align-items: center;
@@ -1527,11 +1644,70 @@ body.modal-open {
 
 .cart-line {
   display: grid;
-  grid-template-columns: 1fr auto auto auto;
+  grid-template-columns: auto 1fr auto auto auto;
   align-items: center;
   gap: 10px;
   padding: 14px 0;
   border-bottom: 1px solid var(--border);
+}
+
+.cart-line-art {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--brand-soft);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.cart-line-art.is-emoji {
+  font-size: 24px;
+}
+
+.cart-head h2 small {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.75;
+}
+
+.cart-empty {
+  margin: 0;
+  text-align: center;
+  color: var(--text);
+  opacity: 0.8;
+}
+
+.ship-progress {
+  display: grid;
+  gap: 7px;
+}
+
+.ship-bar {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.ship-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--brand), #f39a4b);
+  transition: width 0.25s ease;
+}
+
+.ship-text {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.ship-text b {
+  color: var(--brand-dark);
 }
 
 .cart-line-main {
