@@ -663,6 +663,15 @@ searchInput.addEventListener('input', () => {
   renderDishes()
 })
 
+const afterLogin = (user) => {
+  toast(`Chào ${user.name}`)
+  syncLoginButton()
+  closePanels()
+  /* Tài khoản quản trị vào thẳng trang admin, khách ở lại trang bán hàng. */
+  const landing = auth.landingFor(user)
+  if (landing) window.location.href = landing
+}
+
 ui.addEventListener('submit', async (event) => {
   if (event.target.id === 'checkoutForm') {
     event.preventDefault()
@@ -709,16 +718,12 @@ ui.addEventListener('submit', async (event) => {
       if (result.error) return showAuthError(result.error)
       const loginResult = await auth.login({ email, password })
       if (loginResult.error) return showAuthError(loginResult.error)
-      toast(`Chào ${loginResult.user.name}`)
-      syncLoginButton()
-      return closePanels()
+      return afterLogin(loginResult.user)
     }
 
     const result = await auth.login({ email, password })
     if (result.error) return showAuthError(result.error)
-    toast(`Chào ${result.user.name}`)
-    syncLoginButton()
-    return closePanels()
+    return afterLogin(result.user)
   }
 })
 

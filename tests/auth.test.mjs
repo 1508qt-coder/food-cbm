@@ -176,3 +176,43 @@ test('resetUsers tao lai tai khoan admin', async () => {
   assert.ok(!emails.includes('xoa@example.com'), 'tai khoan cu phai bi xoa')
   assert.ok(emails.includes('admin@cbmfood.vn'), 'phai co lai admin')
 })
+
+test('dang nhap admin thi landing ve trang admin', async () => {
+  const auth = await freshAuth()
+  const { user } = await auth.login({ email: 'admin@cbmfood.vn', password: 'admin123' })
+  assert.equal(auth.landingFor(user), auth.ADMIN_URL)
+  assert.equal(auth.ADMIN_URL, '/admin.html')
+})
+
+test('dang nhap khach thi o lai trang ban hang', async () => {
+  const auth = await freshAuth()
+  await auth.register({ name: 'Khach Hang', email: 'kh@example.com', password: 'matkhau123' })
+  const { user } = await auth.login({ email: 'kh@example.com', password: 'matkhau123' })
+  assert.equal(auth.landingFor(user), null, 'khach khong duoc chuyen sang trang admin')
+})
+
+test('landingFor xu ly ca truong hop rong', async () => {
+  const auth = await freshAuth()
+  assert.equal(auth.landingFor(null), null)
+  assert.equal(auth.landingFor(undefined), null)
+  assert.equal(auth.landingFor({ role: 'customer' }), null)
+  assert.equal(auth.landingFor({ role: 'admin' }), auth.ADMIN_URL)
+  assert.equal(auth.landingFor({}), null)
+})
+
+test('landingFor chi la quy tac don gian, quyen do gate kiem tra rieng', async () => {
+  const auth = await freshAuth()
+  assert.equal(auth.landingFor({ role: 'admin', email: 'x@x.com' }), '/admin.html')
+  assert.equal(
+    auth.canAccessAdmin(),
+    false,
+    'khong dang nhap thi canAccessAdmin van phai false du object co role admin',
+  )
+})
+
+test('admin chua dang nhap van bi chan o cong trang admin', async () => {
+  const auth = await freshAuth()
+  await auth.login({ email: 'admin@cbmfood.vn', password: 'admin123' })
+  auth.logout()
+  assert.equal(auth.canAccessAdmin(), false, 'dang xuat roi thi khong con quyen')
+})

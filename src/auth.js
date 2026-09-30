@@ -109,6 +109,15 @@ export const getUser = () => {
 
 export const canAccessAdmin = () => getUser()?.role === 'admin'
 
+export const ADMIN_URL = '/admin.html'
+
+/**
+ * Sau khi đăng nhập thì đưa người dùng đi đâu.
+ * Tài khoản quản trị vào thẳng trang admin, khách thì ở lại trang bán hàng
+ * (null = không chuyển trang).
+ */
+export const landingFor = (user) => (user?.role === 'admin' ? ADMIN_URL : null)
+
 export const register = async ({ name, email, phone = '', password } = {}) => {
   const fullName = typeof name === 'string' ? name.trim() : ''
   const mail = normalEmail(email)
