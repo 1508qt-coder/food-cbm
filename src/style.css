@@ -1254,47 +1254,123 @@ svg {
    nên không có gì che giỏ và không có gì làm mờ màn hình.
    ======================================================= */
 
-.cart-panel {
-  padding: 56px 0;
-  border-top: 1px solid var(--border);
-  background: var(--card);
-  /* --header-h do JS đo, vì header dính cao khác nhau ở từng breakpoint
-     (73px / 159px / 117px). Dùng số cứng sẽ bị header đè lên đầu giỏ. */
-  scroll-margin-top: calc(var(--header-h, 73px) + 12px);
+/* Lớp phủ phủ kín màn hình để báo hiệu có hộp thoại đang mở. z-index thấp
+   hơn sidebar nên nó chỉ nhận cú click đóng, không nuốt cú click trong giỏ. */
+.cart-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
 }
 
-.cart-panel[hidden] {
+.cart-sidebar {
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  width: min(440px, 100vw);
+  height: 100vh;
+  height: 100dvh;
+  background: var(--card);
+  box-shadow: -24px 0 60px rgba(40, 20, 10, .22);
+  animation: cartSlideIn .26s ease;
+}
+
+.cart-overlay:not([hidden]) {
+  animation: cartFadeIn .26s ease;
+}
+
+.cart-sidebar[hidden],
+.cart-overlay[hidden] {
   display: none;
 }
 
-.cart-panel-head {
+@keyframes cartSlideIn {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes cartFadeIn {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Cú trượt cả tấm giỏ dễ gây khó chịu cho người nhạy cảm thị giác */
+@media (prefers-reduced-motion: reduce) {
+  .cart-sidebar,
+  .cart-overlay:not([hidden]) {
+    animation: none;
+  }
+}
+
+.cart-sidebar-head {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 24px;
+  flex-shrink: 0;
+  padding: 22px 20px 16px;
+  border-bottom: 1px solid var(--border);
 }
 
-.cart-panel-head h2 {
-  font-size: 32px;
+.cart-sidebar-title h2 {
+  font-size: 24px;
 }
 
-.cart-panel-head .eyebrow {
-  margin-bottom: 6px;
+.cart-sidebar-title .eyebrow {
+  margin-bottom: 4px;
 }
 
+.cart-sidebar-close {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cart-sidebar-close:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+/* Phần cuộn riêng, nhờ vậy tiêu đề giỏ luôn bám đỉnh khi danh sách món dài */
+.cart-sidebar-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 20px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Trong hộp hẹp, dòng món xuống 2 hàng thay vì bị bóp thành 5 cột */
 .cart-line {
   display: grid;
-  grid-template-columns: auto 1fr auto auto auto;
-  grid-template-areas: 'art main qty total remove';
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'art main   main remove'
+    'art qty    total remove';
   align-items: center;
-  gap: 14px;
-  padding: 16px 0;
+  gap: 8px 12px;
+  padding: 14px 0;
   border-bottom: 1px solid var(--border);
 }
 
 .cart-line-art {
   grid-area: art;
+  align-self: start;
   width: 56px;
   height: 56px;
   display: grid;
@@ -1338,7 +1414,9 @@ svg {
 .cart-empty {
   display: grid;
   justify-items: center;
+  align-content: center;
   gap: 6px;
+  flex: 1;
   padding: 40px 12px;
   text-align: center;
   color: var(--text);
@@ -1361,12 +1439,9 @@ svg {
 }
 
 .cart-summary {
-  max-width: 420px;
-  margin: 24px 0 0 auto;
-  padding: 18px 20px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: var(--bg);
+  margin-top: auto;
+  padding: 18px 0 0;
+  border-top: 1px solid var(--border);
   display: grid;
   gap: 8px;
 }
@@ -1386,7 +1461,8 @@ svg {
 
 /* Bước thanh toán vẫn phải thấy món và tổng tiền đang mua */
 .cart-review {
-  padding: 18px 20px;
+  margin-top: 16px;
+  padding: 16px;
   border: 1px solid var(--border);
   border-radius: 18px;
   background: var(--bg);
@@ -1400,15 +1476,14 @@ svg {
 }
 
 .cart-review-total {
-  max-width: 420px;
-  margin: 12px 0 0 auto;
   width: 100%;
+  margin: 12px 0 0 auto;
   display: grid;
   gap: 8px;
 }
 
 .cart-form {
-  max-width: 520px;
+  margin-top: 18px;
   display: grid;
   gap: 14px;
 }
@@ -1474,6 +1549,8 @@ svg {
 
 .cart-remove {
   grid-area: remove;
+  align-self: center;
+  justify-self: end;
   display: inline-grid;
   place-items: center;
   width: 36px;
@@ -1988,56 +2065,8 @@ svg {
     padding-inline: 16px;
   }
 
-  .cart-panel {
-    padding: 40px 0;
-  }
-
-  .cart-panel-head {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .cart-panel-head h2 {
-    font-size: 26px;
-  }
-
-  .cart-summary,
-  .cart-review-total {
-    margin-inline: 0;
-    max-width: none;
-  }
-
-  /* Dòng món xuống 2 hàng thay vì 5 cột bị bóp trên màn hình hẹp */
-  .cart-line {
-    grid-template-columns: auto 1fr auto;
-    grid-template-areas:
-      'art info remove'
-      'art qty  price';
-    gap: 6px 10px;
-  }
-
-  .cart-line-art {
-    grid-area: art;
-  }
-
-  .cart-line-main {
-    grid-area: info;
-  }
-
-  .cart-line .qty {
-    grid-area: qty;
-    justify-self: start;
-  }
-
-  .cart-line-total {
-    grid-area: price;
-    align-self: center;
-    text-align: right;
-  }
-
-  .cart-remove {
-    grid-area: remove;
+  .cart-sidebar {
+    width: min(400px, 100vw);
   }
 
   .toast-host {
@@ -2083,16 +2112,8 @@ svg {
     font-size: 13.5px;
   }
 
-  .cart-line {
-    grid-template-columns: auto 1fr;
-    grid-template-areas:
-      'art  info'
-      'qty  price'
-      'remove remove';
-  }
-
-  .cart-remove {
-    justify-self: end;
+  .cart-line-total {
+    min-width: 0;
   }
 }
 

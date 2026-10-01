@@ -71,21 +71,23 @@ const shell = () => `
   </div>
 </header>
 
-<!-- Giỏ hàng nằm ngay dưới đầu trang, trong dòng trang: không lớp phủ,
-     không position:fixed, không z-index, nên không thể bị làm mờ hay che
-     mất cú click. -->
-<section id="cart" class="cart-panel" aria-labelledby="cartTitle" hidden>
-  <div class="container">
-    <div class="cart-panel-head">
-      <div>
-        <p class="eyebrow">Đơn của bạn</p>
-        <h2 id="cartTitle">Giỏ hàng</h2>
-      </div>
-      <button type="button" class="btn btn-ghost btn-sm" data-action="close-cart">Ẩn giỏ</button>
+<!-- Giỏ hàng không nằm trong dòng trang nữa: nó trượt từ phải, phủ một
+     lớp mờ toàn màn hình. Lớp phủ z-index thấp hơn nên chỉ nhận cú click đóng,
+     mọi cú click trong giỏ vẫn rơi vào sidebar. -->
+<div id="cartOverlay" class="cart-overlay" data-action="close-cart" hidden></div>
+
+<aside id="cart" class="cart-sidebar" role="dialog" aria-modal="true"
+  aria-labelledby="cartTitle" hidden>
+  <div class="cart-sidebar-head">
+    <div class="cart-sidebar-title">
+      <p class="eyebrow">Đơn của bạn</p>
+      <h2 id="cartTitle">Giỏ hàng</h2>
     </div>
-    <div id="cartBody"></div>
+    <button type="button" class="cart-sidebar-close" data-action="close-cart"
+      aria-label="Đóng giỏ hàng">&times;</button>
   </div>
-</section>
+  <div id="cartBody" class="cart-sidebar-body"></div>
+</aside>
 
 <main>
 
@@ -386,7 +388,7 @@ const toast = (message, tone = '') => {
 
 const closePanels = () => {
   ui.innerHTML = ''
-  document.body.style.overflow = ''
+  syncScrollLock()
   lastFocused?.focus?.()
   lastFocused = null
 }
@@ -400,24 +402,22 @@ const renderBadge = () => {
 
 /* =========================
    GIỎ HÀNG
-   Giỏ và form thanh toán đều nằm trong section #cart của dòng trang.
-   Không dùng position:fixed, z-index hay lớp phủ tối, nên không có
-   gì che được giỏ và không có gì làm mờ màn hình.
+   Giỏ là một hộp thoại trượt từ phải kèm lớp phủ mờ. Lớp phủ nằm dưới
+   sidebar nên nhấn vào vùng tối sẽ đóng giỏ, còn mọi thao tác trong giỏ
+   không bị chặn.
 ========================= */
 
 const cartPanel = $('#cart')
+const cartOverlay = $('#cartOverlay')
 const cartBody = $('#cartBody')
+let cartReturnFocus = null
 
-/* Header dính cao khác nhau theo breakpoint, nên đo thật rồi đưa vào
-   --header-h. Nhờ vậy cuộn tới giỏ luôn dừng ngay dưới header, không bị đè. */
-const syncHeaderHeight = () => {
-  const header = document.querySelector('.site-header')
-  if (!header) return
-  document.documentElement.style.setProperty('--header-h', `${Math.ceil(header.offsetHeight)}px`)
+/* Khóa cuộn trang khi hộp thoại đang mở. Cả đăng nhập và giỏ đều dùng
+   chung một trạng thái để không mở hai thứ cùng lúc. */
+const syncScrollLock = () => {
+  const locked = state.cartOpen || Boolean(ui.innerHTML)
+  document.body.style.overflow = locked ? 'hidden' : ''
 }
-
-window.addEventListener('resize', syncHeaderHeight)
-syncHeaderHeight()
 
 const checkoutFormHtml = () => {
   const user = auth.getUser()
@@ -483,16 +483,26 @@ const renderCart = () => {
 }
 
 const showCart = () => {
+  cartReturnFocus = document.activeElement
+  cartOverlay.hidden = false
   cartPanel.hidden = false
   state.cartOpen = true
+  state.checkout = false
+  syncScrollLock()
   renderCart()
-  cartPanel.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  cartBody.scrollTop = 0
+  cartPanel.querySelector('.cart-sidebar-close')?.focus()
 }
 
-const hideCart = () => {
+const hideCart = ({ restoreFocus = true } = {}) => {
+  if (!state.cartOpen) return
+  cartOverlay.hidden = true
   cartPanel.hidden = true
   state.cartOpen = false
   state.checkout = false
+  syncScrollLock()
+  if (restoreFocus) cartReturnFocus?.focus?.()
+  cartReturnFocus = null
 }
 
 const openCheckout = () => {
@@ -649,6 +659,7 @@ document.addEventListener('click', (event) => {
       return toast('Đã xoá toàn bộ giỏ hàng')
     }
     if (action === 'browse-menu') {
+      hideCart({ restoreFocus: false })
       document.querySelector('#menu')?.scrollIntoView({ behavior: 'smooth' })
       return undefined
     }
@@ -687,7 +698,7 @@ const afterLogin = (user) => {
   if (landing) window.location.href = landing
 }
 
-/* Form thanh toán nằm trong section #cart nên nghe ở cartBody. */
+/* Form thanh toán nằm trong sidebar giỏ nên nghe ở cartBody. */
 cartBody.addEventListener('submit', (event) => {
   if (event.target.id !== 'checkoutForm') return
   event.preventDefault()
@@ -711,7 +722,6 @@ cartBody.addEventListener('submit', (event) => {
   cart.clear()
   renderBadge()
   state.checkout = false
-  cartPanel.scrollIntoView({ behavior: 'smooth', block: 'start' })
   cartBody.innerHTML = `
     <div class="cart-done">
       <div class="success-mark" aria-hidden="true">✓</div>
@@ -720,6 +730,7 @@ cartBody.addEventListener('submit', (event) => {
       <p class="muted">Tổng thanh toán ${money(result.order.total)}</p>
       <button type="button" class="btn btn-primary" data-action="close-cart">Đóng</button>
     </div>`
+  cartBody.scrollTop = 0
 })
 
 ui.addEventListener('submit', async (event) => {
@@ -766,17 +777,35 @@ document.addEventListener('keydown', (event) => {
   }
 
   if (event.key !== 'Escape') return
-  if (ui.innerHTML) {
-    closePanels()
-    return
-  }
   if (state.cartOpen) {
     hideCart()
+    return
+  }
+  if (ui.innerHTML) {
+    closePanels()
     return
   }
   if (state.query) {
     resetFilter()
     searchInput.focus()
+  }
+})
+
+/* Giỏ là hộp thoại modal nên Tab phải giữ bên trong nó, không chạy ra
+   nút bấm phía sau lớp phủ. */
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Tab' || !state.cartOpen) return
+  const focusable = [...cartPanel.querySelectorAll('button:not([disabled]), input, textarea, a[href]')]
+    .filter((el) => el.offsetParent !== null)
+  if (!focusable.length) return
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
   }
 })
 
