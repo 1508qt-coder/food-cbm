@@ -1,15 +1,7 @@
 import './style.css'
 import * as db from './store.js'
-import * as cart from './cart.js'
 import * as auth from './auth.js'
 import { filterDishes } from './search.js'
-import {
-  cartEmptyHtml,
-  cartLines,
-  cartSummaryHtml,
-  shipProgressHtml,
-  summarize,
-} from './cart-view.js'
 
 const $ = (sel) => document.querySelector(sel)
 const money = (n) => `${Number(n || 0).toLocaleString('vi-VN')}đ`
@@ -62,11 +54,6 @@ const shell = () => `
       <a href="/admin.html" class="btn btn-outline btn-admin">
         Quản trị
       </a>
-
-      <button class="btn btn-primary btn-cart" data-action="open-cart">
-        Giỏ hàng
-        <span class="cart-badge" id="cartBadge" hidden>0</span>
-      </button>
     </div>
 
   </div>
@@ -295,11 +282,13 @@ const dishCard = (dish, index) => {
       </div>
       <div class="dish-foot">
         <span class="price">${money(dish.price)}</span>
-        <button
-          class="btn btn-sm btn-primary order-btn"
-          data-add="${escape(dish.code)}"
-          ${soldOut ? 'disabled' : ''}
-        >${soldOut ? 'Tạm ngưng' : 'Đặt ngay'}</button>
+        ${
+          soldOut
+            ? '<span class="dish-flag is-off">Tạm ngưng</span>'
+            : dish.status === 'runningOut'
+              ? '<span class="dish-flag is-warn">Sắp hết</span>'
+              : ''
+        }
       </div>
     </article>`
 }
@@ -349,45 +338,23 @@ const resetFilter = () => {
 }
 
 /* =========================
-   GIỎ HÀNG
+   GIAO DIỆN PHỦ
 ========================= */
 
 const ui = $('#ui-root')
 let lastFocused = null
 
-/* Toast nằm ngoài #ui-root để không bị xoá mỗi lần vẽ lại giỏ hàng. */
+/* Toast nằm ngoài #ui-root để không bị xoá mỗi lần vẽ lại hộp thoại. */
 const toastHost = document.createElement('div')
 toastHost.className = 'toast-host'
 document.body.append(toastHost)
 
-const toast = (message, tone = '', action = null) => {
+const toast = (message, tone = '') => {
   const node = document.createElement('div')
   node.className = `toast ${tone === 'err' ? 'is-err' : ''}`.trim()
   node.textContent = message
-  if (action?.label) {
-    const btn = document.createElement('button')
-    btn.type = 'button'
-    btn.className = 'toast-action'
-    btn.textContent = action.label
-    btn.addEventListener('click', () => {
-      node.remove()
-      action.run()
-    })
-    node.append(btn)
-  }
   toastHost.append(node)
-  setTimeout(() => node.remove(), action?.label ? 6000 : 3000)
-}
-
-const renderBadge = () => {
-  const badge = $('#cartBadge')
-  const total = cart.count()
-  badge.textContent = String(total)
-  badge.hidden = total === 0
-  if (total === 0) return
-  badge.classList.remove('is-bump')
-  void badge.offsetWidth
-  badge.classList.add('is-bump')
+  setTimeout(() => node.remove(), 3000)
 }
 
 const closePanels = () => {
@@ -397,145 +364,12 @@ const closePanels = () => {
   lastFocused = null
 }
 
-/* Thanh tiến trình + bảng tổng tiền dùng chung cho cả giỏ và form thanh toán. */
-const sumOf = (lines) =>
-  summarize(lines, { freeShipFrom: db.FREE_SHIP_FROM, shipFee: db.SHIP_FEE })
-
-const focusQtyBtn = (key, delta) => {
-  const same = [...ui.querySelectorAll('[data-qty]')].filter((btn) => btn.dataset.key === key)
-  const target =
-    same.find((btn) => Number(btn.dataset.qty) === delta && !btn.disabled) ??
-    same.find((btn) => !btn.disabled)
-  target?.focus()
-}
-
-/**
- * Vẽ lại ngăn giỏ. `focus` giữ con trỏ ở đúng nút vừa bấm vì toàn bộ
- * #ui-root bị thay mới, và vị trí cuộn cũng bị đưa về đầu nếu không khôi phục.
- */
-const renderCart = (focus = null) => {
-  const lines = cart.list()
-  const sum = sumOf(lines)
-  const scrollTop = ui.querySelector('.cart-body')?.scrollTop ?? 0
-
-  ui.innerHTML = `
-    <div class="drawer-backdrop" data-close="1"></div>
-    <aside class="cart-drawer" role="dialog" aria-modal="true" aria-label="Giỏ hàng">
-      <header class="cart-head">
-        <h2>Giỏ hàng ${
-          sum.kinds ? `<small>${sum.count} món · ${sum.kinds} loại</small>` : ''
-        }</h2>
-        <button type="button" class="icon-btn" data-close="1" aria-label="Đóng">✕</button>
-      </header>
-      <div class="cart-body">
-        ${sum.kinds ? cartLines(lines, { maxQty: cart.MAX_QTY }) : cartEmptyHtml()}
-      </div>
-      <footer class="cart-foot">
-        ${shipProgressHtml({ ...sum, freeShipFrom: db.FREE_SHIP_FROM })}
-        ${
-          sum.kinds
-            ? `${cartSummaryHtml(sum)}
-               <p class="cart-hint">Tối đa ${cart.MAX_QTY} phần cho mỗi món. Bấm “Thanh toán” để hoàn tất đơn.</p>
-               <button type="button" class="btn btn-primary btn-block" data-action="checkout">Thanh toán</button>
-               <button type="button" class="btn btn-ghost btn-block" data-action="clear-cart">Xoá giỏ</button>`
-            : `<button type="button" class="btn btn-primary btn-block" data-action="browse-menu">Xem thực đơn</button>`
-        }
-      </footer>
-    </aside>`
-
-  const body = ui.querySelector('.cart-body')
-  if (body) body.scrollTop = scrollTop
-  if (focus) focusQtyBtn(focus.key, focus.delta)
-  document.body.style.overflow = 'hidden'
-}
-
-const openCart = () => {
-  lastFocused = document.activeElement
-  renderCart()
-}
-
-/** Bỏ một dòng rồi cho khách hoàn tác được nếu bấm nhầm. */
-const dropLine = (line) => {
-  cart.remove(line.key)
-  renderBadge()
-  renderCart()
-  toast(`Đã bỏ ${line.name} khỏi giỏ`, '', {
-    label: 'Hoàn tác',
-    run: () => {
-      cart.add(line.key, line.qty)
-      renderBadge()
-      renderCart()
-    },
-  })
-}
-
-const openCheckout = () => {
-  lastFocused = document.activeElement
-  const user = auth.getUser()
-  const lines = cart.list()
-  if (!lines.length) return toast('Giỏ hàng đang trống', 'err')
-  const sum = sumOf(lines)
-  ui.innerHTML = `
-    <div class="drawer-backdrop" data-close="1"></div>
-    <div class="modal-backdrop-cart">
-      <div class="sheet" role="dialog" aria-modal="true" aria-label="Thanh toán">
-        <header class="sheet-head">
-          <h2>Thông tin giao hàng</h2>
-          <button type="button" class="icon-btn" data-close="1" aria-label="Đóng">✕</button>
-        </header>
-        <form id="checkoutForm" novalidate>
-          <div class="sheet-body">
-            <label class="field">
-              <span>Người nhận *</span>
-              <input name="name" value="${escape(user?.name ?? '')}" required />
-            </label>
-            <label class="field">
-              <span>Số điện thoại *</span>
-              <input name="phone" value="${escape(user?.phone ?? '')}" inputmode="numeric" required />
-            </label>
-            <label class="field">
-              <span>Địa chỉ *</span>
-              <textarea name="address" required></textarea>
-            </label>
-            <label class="field">
-              <span>Ghi chú</span>
-              <textarea name="note"></textarea>
-            </label>
-            <div class="sheet-lines">
-              ${cartLines(lines, { maxQty: cart.MAX_QTY, editable: false })}
-            </div>
-            <p class="form-error" id="checkoutError" role="alert" hidden></p>
-            ${cartSummaryHtml(sum)}
-          </div>
-          <div class="sheet-foot">
-            <button type="submit" class="btn btn-primary btn-block">Đặt món</button>
-          </div>
-        </form>
-      </div>
-    </div>`
-  document.body.style.overflow = 'hidden'
-}
-
-const showSuccess = (order) => {
-  ui.innerHTML = `
-    <div class="modal-backdrop-cart">
-      <div class="sheet is-success" role="dialog" aria-modal="true">
-        <div class="success-mark">✓</div>
-        <h2>Đặt món thành công</h2>
-        <p>Mã đơn <b>${escape(order.code)}</b></p>
-        <p class="muted">Tổng thanh toán ${money(order.total)}</p>
-        <button type="button" class="btn btn-primary btn-block" data-close="1">Đóng</button>
-      </div>
-    </div>`
-  document.body.style.overflow = 'hidden'
-}
-
 const openAuth = (mode = 'login') => {
   lastFocused = document.activeElement
   const user = auth.getUser()
   if (user && mode === 'login') {
     ui.innerHTML = `
-      <div class="modal-backdrop-cart">
+      <div class="sheet-backdrop">
         <div class="sheet" role="dialog" aria-modal="true">
           <header class="sheet-head"><h2>Tài khoản</h2>
             <button type="button" class="icon-btn" data-close="1" aria-label="Đóng">✕</button>
@@ -555,7 +389,7 @@ const openAuth = (mode = 'login') => {
   }
 
   ui.innerHTML = `
-    <div class="modal-backdrop-cart">
+    <div class="sheet-backdrop">
       <div class="sheet" role="dialog" aria-modal="true">
         <header class="sheet-head"><h2>${mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản'}</h2>
           <button type="button" class="icon-btn" data-close="1" aria-label="Đóng">✕</button>
@@ -617,40 +451,7 @@ document.addEventListener('click', (event) => {
     return undefined
   }
 
-  const addBtn = event.target.closest('[data-add]')
-  if (addBtn) {
-    const key = addBtn.dataset.add
-    const capped = cart.qtyOf(key) + 1 >= cart.MAX_QTY
-    const result = cart.add(key, 1)
-    if (result.error) return toast('Không thêm được món này', 'err')
-    renderBadge()
-    return toast(capped ? `Tối đa ${cart.MAX_QTY} phần cho mỗi món` : 'Đã thêm vào giỏ')
-  }
 
-  const qtyBtn = event.target.closest('[data-qty]')
-  if (qtyBtn) {
-    const key = qtyBtn.dataset.key
-    const delta = Number(qtyBtn.dataset.qty)
-    const result = cart.changeQty(key, delta)
-    if (result.error) return toast('Không cập nhật được số lượng', 'err')
-
-    if (result.removed) {
-      /* Giảm từ 1 xuống 0 = bỏ món, nên cũng cho hoàn tác như nút xoá. */
-      return dropLine({ key, name: result.name, qty: result.qty })
-    }
-
-    renderBadge()
-    renderCart({ key, delta })
-    if (result.atMax) return toast(`Tối đa ${cart.MAX_QTY} phần cho mỗi món`)
-    return undefined
-  }
-
-  const removeBtn = event.target.closest('[data-remove]')
-  if (removeBtn) {
-    const line = cart.list().find((l) => l.key === removeBtn.dataset.remove)
-    if (!line) return undefined
-    return dropLine(line)
-  }
 
   const authBtn = event.target.closest('[data-auth]')
   if (authBtn) {
@@ -661,27 +462,7 @@ document.addEventListener('click', (event) => {
   const actionBtn = event.target.closest('[data-action]')
   if (actionBtn) {
     const action = actionBtn.dataset.action
-    if (action === 'open-cart') return openCart()
-    if (action === 'checkout') return openCheckout()
-    if (action === 'clear-cart') {
-      const snapshot = cart.list().map((line) => ({ key: line.key, qty: line.qty }))
-      cart.clear()
-      renderBadge()
-      renderCart()
-      return toast('Đã xoá toàn bộ giỏ hàng', '', {
-        label: 'Hoàn tác',
-        run: () => {
-          snapshot.forEach((line) => cart.add(line.key, line.qty))
-          renderBadge()
-          renderCart()
-        },
-      })
-    }
-    if (action === 'browse-menu') {
-      closePanels()
-      document.querySelector('#menu')?.scrollIntoView({ behavior: 'smooth' })
-      return undefined
-    }
+
     if (action === 'logout') {
       auth.logout()
       syncLoginButton()
@@ -718,30 +499,6 @@ const afterLogin = (user) => {
 }
 
 ui.addEventListener('submit', async (event) => {
-  if (event.target.id === 'checkoutForm') {
-    event.preventDefault()
-    const data = new FormData(event.target)
-    const box = $('#checkoutError')
-    const result = db.createOrder({
-      customer: {
-        name: String(data.get('name') ?? ''),
-        phone: String(data.get('phone') ?? ''),
-        address: String(data.get('address') ?? ''),
-      },
-      note: String(data.get('note') ?? ''),
-      userId: auth.getUser()?.id ?? null,
-    })
-    if (result.error) {
-      box.textContent = result.error
-      box.hidden = false
-      return
-    }
-    cart.clear()
-    renderBadge()
-    showSuccess(result.order)
-    return
-  }
-
   if (event.target.id === 'authForm') {
     event.preventDefault()
     const data = new FormData(event.target)
@@ -804,9 +561,7 @@ async function startShop() {
     await auth.init()
     renderCategories()
     renderDishes()
-    renderBadge()
     syncLoginButton()
-    cart.syncWithMenu()
   } catch (error) {
     console.error('[CBM FOOD] Khởi tạo thất bại:', error)
     dishGrid.innerHTML = '<p class="muted">Không tải được thực đơn. Vui lòng kiểm tra console.</p>'
