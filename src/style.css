@@ -1605,6 +1605,9 @@ body.modal-open {
   display: flex;
   flex-direction: column;
   background: var(--bg);
+  /* Phải cao hơn .drawer-backdrop (70), nếu không lớp phủ blur sẽ đè lên
+     ngăn giỏ và nuốt hết cú click. */
+  z-index: 71;
   box-shadow: -20px 0 50px -20px rgba(43, 33, 28, 0.5);
   animation: slide-in 0.22s ease;
 }
