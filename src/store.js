@@ -351,10 +351,4 @@ export const stats = () => {
   }
 }
 
-export const menuByCategory = () =>
-  CATEGORIES.map((cat) => ({
-    ...cat,
-    dishes: dishes.filter((d) => d.category === cat.id),
-  }))
-
 export const promotions = () => rawFoods.promotions ?? []

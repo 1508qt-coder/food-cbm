@@ -284,19 +284,6 @@ svg {
       transparent 45%);
 }
 
-.hero-card-main .plate {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
-  border: 2px dashed rgba(255, 255, 255, 0.7);
-  font-size: 34px;
-  font-weight: 800;
-}
-
 .hero-card-main p {
   position: relative;
   font-size: 15px;
@@ -438,30 +425,6 @@ svg {
   margin-bottom: 16px;
 }
 
-.dish-art-1 {
-  background: linear-gradient(140deg, #ffb26b, #ff8a3d);
-}
-
-.dish-art-2 {
-  background: linear-gradient(140deg, #ffd08a, #f5a038);
-}
-
-.dish-art-3 {
-  background: linear-gradient(140deg, #e8b48a, #d0884a);
-}
-
-.dish-art-4 {
-  background: linear-gradient(140deg, #f2ad81, #e0713b);
-}
-
-.dish-art-5 {
-  background: linear-gradient(140deg, #ff9b6b, #e85a2d);
-}
-
-.dish-art-6 {
-  background: linear-gradient(140deg, #a8d8c8, #3e8f6b);
-}
-
 .dish h3 {
   margin-bottom: 6px;
 }
@@ -502,22 +465,6 @@ svg {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-}
-
-.about-phone {
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 6px;
-  height: 200px;
-  border-radius: 24px;
-  border: 1px solid var(--border);
-  background: linear-gradient(150deg, #fff3ea, var(--brand-soft));
-  text-align: center;
-}
-
-.about-phone:nth-child(2) {
-  transform: translateY(24px);
 }
 
 .about-count {
@@ -681,14 +628,6 @@ svg {
     grid-template-columns: 1fr;
   }
 
-  .about-phone {
-    height: 150px;
-  }
-
-  .about-phone:nth-child(2) {
-    transform: none;
-  }
-
   .cta-box {
     padding: 40px 24px;
   }
@@ -828,190 +767,6 @@ svg {
   visibility: visible;
 }
 
-body.modal-open {
-  overflow: hidden;
-}
-
-.auth-modal {
-  position: relative;
-  display: grid;
-  grid-template-columns: .9fr 1.1fr;
-  width: min(900px, 100%);
-  max-height: min(700px, calc(100vh - 40px));
-  overflow: auto;
-  border-radius: 28px;
-  background: #fff;
-  box-shadow: 0 30px 80px rgba(40, 20, 10, .3);
-  transform: translateY(16px) scale(.98);
-  transition: transform .2s;
-}
-
-.modal-backdrop.show .auth-modal {
-  transform: translateY(0) scale(1);
-}
-
-.modal-close {
-  position: absolute;
-  z-index: 3;
-  top: 14px;
-  right: 14px;
-  width: 38px;
-  height: 38px;
-  border: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, .9);
-  color: var(--ink);
-  font-size: 25px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.auth-image {
-  min-height: 560px;
-}
-
-.auth-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.auth-panel {
-  padding: 48px 42px 36px;
-}
-
-.auth-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 30px;
-  padding: 5px;
-  border-radius: 14px;
-  background: #fff4ed;
-}
-
-.auth-tab {
-  flex: 1;
-  padding: 10px;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--text);
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.auth-tab.active {
-  background: #fff;
-  color: var(--brand);
-  box-shadow: 0 5px 18px rgba(120, 60, 30, .1);
-}
-
-.auth-panel h2 {
-  margin-bottom: 8px;
-}
-
-.auth-subtitle {
-  margin-bottom: 22px;
-  font-size: 14px;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--ink);
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  outline: none;
-  font: inherit;
-  font-size: 14px;
-  background: #fffaf7;
-}
-
-.form-group input:focus {
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(232, 84, 45, .1);
-}
-
-.password-wrap {
-  position: relative;
-}
-
-.password-wrap input {
-  padding-right: 60px;
-}
-
-.password-wrap button {
-  position: absolute;
-  top: 50%;
-  right: 8px;
-  transform: translateY(-50%);
-  border: 0;
-  background: none;
-  color: var(--brand);
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.register-only {
-  display: none;
-}
-
-.register-only.show {
-  display: block;
-}
-
-.auth-submit {
-  width: 100%;
-  margin-top: 6px;
-}
-
-.form-message {
-  min-height: 24px;
-  color: var(--brand);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.switch-auth {
-  margin-top: 18px;
-  text-align: center;
-  font-size: 14px;
-}
-
-.switch-auth button {
-  border: 0;
-  background: none;
-  color: var(--brand);
-  font-weight: 800;
-  cursor: pointer;
-}
-
-@media (max-width: 960px) {
-  .auth-modal {
-    grid-template-columns: 1fr;
-    max-width: 520px;
-  }
-
-  .auth-image {
-    display: none;
-  }
-
-  .auth-panel {
-    padding: 40px 32px 30px;
-  }
-}
-
 @media (max-width: 640px) {
   .header-actions .btn-login {
     display: none;
@@ -1019,10 +774,6 @@ body.modal-open {
 
   .header-actions .btn {
     padding-inline: 14px;
-  }
-
-  .auth-panel {
-    padding: 36px 22px 26px;
   }
 
   .about-art {
@@ -1224,21 +975,8 @@ body.modal-open {
 
 
 /* =========================
-   FORM ĐĂNG KÝ
-========================= */
-
-.register-only {
-  display: none;
-}
-
-.register-only.show {
-  display: block;
-}
-
-
-/* =========================
    MODAL
-========================= */
+   ========================= */
 
 .modal-backdrop {
   opacity: 0;
@@ -1253,53 +991,10 @@ body.modal-open {
   pointer-events: auto;
 }
 
-body.modal-open {
-  overflow: hidden;
-}
-
-
-/* =========================
-   THÔNG BÁO FORM
-========================= */
-
-.form-message {
-  min-height: 22px;
-  margin: 8px 0 14px;
-  color: #f4512a;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-
-/* =========================
-   PASSWORD
-========================= */
-
-.password-wrap {
-  position: relative;
-}
-
-.password-wrap input {
-  width: 100%;
-  padding-right: 70px;
-}
-
-.password-wrap button {
-  position: absolute;
-  top: 50%;
-  right: 12px;
-  transform: translateY(-50%);
-  border: 0;
-  background: transparent;
-  color: #f4512a;
-  font-weight: 700;
-  cursor: pointer;
-}
-
 
 /* =========================
    RESPONSIVE
-========================= */
+   ========================= */
 
 @media (max-width: 768px) {
 
@@ -1972,18 +1667,6 @@ body.modal-open {
   font-weight: 600;
 }
 
-.sheet-lines {
-  border-top: 1px solid var(--border);
-  margin-top: 4px;
-}
-
-.sheet.is-success {
-  padding: 26px 22px;
-  text-align: center;
-  display: grid;
-  gap: 10px;
-}
-
 .success-mark {
   width: 58px;
   height: 58px;
@@ -1995,14 +1678,6 @@ body.modal-open {
   color: #fff;
   font-size: 30px;
   font-weight: 800;
-}
-
-.sheet-foot {
-  display: grid;
-  gap: 10px;
-  padding: 16px 20px;
-  border-top: 1px solid var(--border);
-  background: var(--card);
 }
 
 
@@ -2199,15 +1874,6 @@ body.modal-open {
 
   .brand-name {
     font-size: 18px;
-  }
-
-  .auth-modal {
-    grid-template-columns: 1fr;
-    max-width: 520px;
-  }
-
-  .auth-image {
-    display: none;
   }
 }
 
