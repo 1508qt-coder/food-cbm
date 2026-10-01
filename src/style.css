@@ -1588,8 +1588,9 @@ body.modal-open {
   inset: 0;
   z-index: 70;
   display: grid;
-  background: rgba(43, 33, 28, 0.45);
-  backdrop-filter: blur(2px);
+  /* Chỉ làm tối nền, KHÔNG blur: blur tràn cả màn hình và che mất ngăn giỏ
+     trên vài cấu hình. Muốn làm mờ riêng phần nền thì thêm lại ở đây. */
+  background: rgba(43, 33, 28, 0.5);
 }
 
 .modal-backdrop-cart {
@@ -1605,16 +1606,19 @@ body.modal-open {
   display: flex;
   flex-direction: column;
   background: var(--bg);
-  /* Phải cao hơn .drawer-backdrop (70), nếu không lớp phủ blur sẽ đè lên
+  /* Phải cao hơn .drawer-backdrop (70), nếu không lớp phủ sẽ đè lên
      ngăn giỏ và nuốt hết cú click. */
   z-index: 71;
   box-shadow: -20px 0 50px -20px rgba(43, 33, 28, 0.5);
   animation: slide-in 0.22s ease;
 }
 
+/* Lệch vào đúng 16px thay vì 100%: kể cả khi animation không chạy,
+   ngăn giỏ vẫn nằm trong màn hình và bấm được. */
 @keyframes slide-in {
   from {
-    transform: translateX(100%);
+    opacity: 0.4;
+    transform: translateX(16px);
   }
 }
 
