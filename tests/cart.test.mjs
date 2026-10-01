@@ -145,3 +145,82 @@ test('syncWithMenu loai bo dong khong con trong thuc don', async () => {
   assert.equal(cart.list().length, 1)
   assert.equal(cart.list()[0].name, 'Mon Giu')
 })
+
+test('dong gio co du ten, mo ta, anh/emoji de hien thi', async () => {
+  const { store, cart } = await freshModules()
+  const dish = store.createDish({ name: 'Pho Dac Biet', description: 'Ninh xuong 12 tieng', price: 65000 })
+  cart.add(dish.code, 2)
+  const [line] = cart.list()
+  assert.equal(line.name, 'Pho Dac Biet')
+  assert.equal(line.description, 'Ninh xuong 12 tieng')
+  assert.equal(line.price, 65000)
+  assert.equal(line.qty, 2)
+  assert.ok(line.emoji, 'dong gio phai co emoji de hien thi')
+})
+
+test('qtyOf tra ve so luong cua mot dong', async () => {
+  const { store, cart } = await freshModules()
+  const dish = store.createDish({ name: 'Mon Dem', price: 10000 })
+  cart.add(dish.code, 3)
+  assert.equal(cart.qtyOf(dish.code), 3)
+  assert.equal(cart.qtyOf('KHONG-CO'), 0)
+})
+
+test('MAX_QTY duoc export cho UI khoa nut tang', async () => {
+  const { cart } = await freshModules()
+  assert.equal(cart.MAX_QTY, 20)
+})
+
+test('changeQty tang va giam so luong', async () => {
+  const { store, cart } = await freshModules()
+  const dish = store.createDish({ name: 'Mon Buoc', price: 20000 })
+  cart.add(dish.code, 2)
+
+  const up = cart.changeQty(dish.code, 1)
+  assert.ok(up.ok, 'tang that bai')
+  assert.equal(up.qty, 3)
+  assert.equal(cart.qtyOf(dish.code), 3)
+
+  const down = cart.changeQty(dish.code, -1)
+  assert.ok(down.ok, 'giam that bai')
+  assert.equal(down.qty, 2)
+  assert.equal(cart.subtotal(), 40000)
+})
+
+test('changeQty tang qua tran thi giu nguyen va bao atMax', async () => {
+  const { store, cart } = await freshModules()
+  const dish = store.createDish({ name: 'Mon Tran', price: 10000 })
+  cart.add(dish.code, cart.MAX_QTY)
+
+  const res = cart.changeQty(dish.code, 1)
+  assert.ok(res.ok)
+  assert.equal(res.atMax, true, 'phai bao da cham tran')
+  assert.equal(cart.qtyOf(dish.code), cart.MAX_QTY)
+})
+
+test('changeQty giam ve 0 thi xoa dong va bao removed kem qty cu', async () => {
+  const { store, cart } = await freshModules()
+  const dish = store.createDish({ name: 'Mon Cuoi', price: 30000 })
+  cart.add(dish.code, 1)
+
+  const res = cart.changeQty(dish.code, -1)
+  assert.ok(res.ok)
+  assert.equal(res.removed, true, 'phai bao da xoa dong')
+  assert.equal(res.name, 'Mon Cuoi')
+  assert.equal(res.qty, 1, 'phai tra qty cu de hoan tac')
+  assert.equal(cart.count(), 0)
+  assert.equal(cart.list().length, 0)
+})
+
+test('changeQty voi buoc 0 hoac khong hop le bi tu choi', async () => {
+  const { store, cart } = await freshModules()
+  const dish = store.createDish({ name: 'Mon Loi', price: 10000 })
+  cart.add(dish.code, 1)
+  assert.equal(cart.changeQty(dish.code, 0).error, 'invalid-qty')
+  assert.equal(cart.changeQty(dish.code, 'abc').error, 'invalid-qty')
+})
+
+test('changeQty tren dong khong co trong gio tra not-found', async () => {
+  const { cart } = await freshModules()
+  assert.equal(cart.changeQty('KHONG-CO', 1).error, 'not-found')
+})

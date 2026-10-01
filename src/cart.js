@@ -1,7 +1,8 @@
 import * as db from './store.js'
 
 const CART_KEY = 'cbmfood.cart'
-const MAX_QTY = 20
+/** UI cần biết trần này để khoá nút "+", nên phải export ra ngoài. */
+export const MAX_QTY = 20
 
 const read = () => {
   try {
@@ -33,10 +34,12 @@ const rebuild = () =>
       return {
         key: dish.code,
         name: dish.name,
+        description: dish.description,
         price: dish.price,
         qty,
         image: dish.image,
         emoji: dish.emoji,
+        accent: dish.accent,
       }
     })
     .filter(Boolean)
@@ -56,6 +59,9 @@ export const shipping = () => {
 export const total = () => subtotal() + shipping()
 
 export const missingForFreeShip = () => Math.max(0, db.FREE_SHIP_FROM - subtotal())
+
+/** Số lượng của một dòng, 0 nếu món không còn trong giỏ. */
+export const qtyOf = (key) => rebuild().find((l) => l.key === key)?.qty ?? 0
 
 export const add = (key, qty = 1) => {
   const dish = db.findDish(key)
@@ -97,6 +103,31 @@ export const remove = (key) => {
   if (lines.length === before) return { error: 'not-found' }
   persist()
   return { ok: true, lines: list(), count: count() }
+}
+
+/**
+ * Tăng/giảm số lượng theo bước cho một dòng giỏ hàng.
+ * - `delta` dương tăng, âm giảm; bước bị cắt bỏ phần thập lân.
+ * - Tăng vượt MAX_QTY thì giữ nguyên số cũ và báo `atMax` để UI khoá nút "+".
+ * - Giảm về 0 thì xoá dòng và báo `removed` kèm qty cũ, đủ để UI báo "Hoàn tác".
+ */
+export const changeQty = (key, delta) => {
+  const rawStep = Number(delta)
+  if (!Number.isFinite(rawStep) || Math.trunc(rawStep) === 0) return { error: 'invalid-qty' }
+  const step = Math.trunc(rawStep)
+
+  const line = rebuild().find((l) => l.key === key)
+  if (!line) return { error: 'not-found' }
+
+  const next = line.qty + step
+  if (next > MAX_QTY) {
+    return { ok: true, atMax: true, qty: MAX_QTY, lines: list(), count: count() }
+  }
+  if (next < 1) {
+    return { ...remove(key), removed: true, name: line.name, qty: line.qty }
+  }
+
+  return { ...setQty(key, next), atMax: next >= MAX_QTY, qty: next }
 }
 
 export const clear = () => {

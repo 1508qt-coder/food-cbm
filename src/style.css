@@ -1535,6 +1535,17 @@ body.modal-open {
   font-weight: 800;
 }
 
+/* Nhấp nháy nhẹ khi số món thay đổi để khách biết đã thêm/bớt. */
+.cart-badge.is-bump {
+  animation: badge-bump 0.3s ease;
+}
+
+@keyframes badge-bump {
+  40% {
+    transform: scale(1.35);
+  }
+}
+
 .dish-emoji {
   font-size: 76px;
   line-height: 1;
@@ -1674,10 +1685,28 @@ body.modal-open {
 }
 
 .cart-empty {
-  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 38px 12px;
   text-align: center;
   color: var(--text);
-  opacity: 0.8;
+  opacity: 0.9;
+}
+
+.cart-empty p {
+  margin: 0;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cart-empty small {
+  max-width: 240px;
+}
+
+.cart-empty-mark {
+  font-size: 44px;
+  line-height: 1;
 }
 
 .ship-progress {
@@ -1713,6 +1742,7 @@ body.modal-open {
 .cart-line-main {
   display: grid;
   gap: 2px;
+  min-width: 0;
 }
 
 .cart-line-main strong {
@@ -1722,6 +1752,16 @@ body.modal-open {
 
 .cart-line-main small {
   opacity: 0.7;
+}
+
+/* Mô tả chỉ giữ 1 dòng để mọi dòng món cao đều nhau. */
+.cart-line-desc {
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cart-line-total {
@@ -1738,6 +1778,17 @@ body.modal-open {
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--card);
+}
+
+.qty.is-max {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+/* Trong form thanh toán số lượng chỉ để xem, không sửa được. */
+.qty.is-static {
+  padding-inline: 12px;
+  background: transparent;
 }
 
 .qty span {
@@ -1762,6 +1813,18 @@ body.modal-open {
 .qty-btn:hover {
   background: var(--brand);
   color: #fff;
+}
+
+.qty-btn[disabled] {
+  cursor: not-allowed;
+  opacity: 0.45;
+  background: var(--border);
+  color: var(--text);
+}
+
+.qty-btn[disabled]:hover {
+  background: var(--border);
+  color: var(--text);
 }
 
 .cart-remove {
@@ -1930,11 +1993,9 @@ body.modal-open {
 }
 
 .toast {
-  position: fixed;
-  left: 50%;
-  bottom: 26px;
-  z-index: 90;
-  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
   padding: 12px 20px;
   border-radius: 999px;
   background: var(--ink);
@@ -1945,6 +2006,39 @@ body.modal-open {
   animation: toast-in 0.2s ease;
 }
 
+/* Nhiều toast cùng lúc thì xếp chồng lên nhau. */
+.toast-host {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  z-index: 90;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  pointer-events: none;
+}
+
+.toast-host .toast-action {
+  pointer-events: auto;
+}
+
+.toast-action {
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: var(--brand);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.toast-action:hover {
+  background: var(--brand-dark);
+}
+
 .toast.is-err {
   background: #b3261e;
 }
@@ -1952,7 +2046,7 @@ body.modal-open {
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translate(-50%, 12px);
+    transform: translateY(12px);
   }
 }
 
@@ -2281,11 +2375,16 @@ body.modal-open {
     flex: 1 1 100%;
   }
 
-  .toast {
+  .toast-host {
     left: 16px;
     right: 16px;
     bottom: 16px;
     transform: none;
+  }
+
+  .toast {
+    width: 100%;
+    justify-content: center;
     text-align: center;
   }
 }

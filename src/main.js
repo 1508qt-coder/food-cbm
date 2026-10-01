@@ -3,6 +3,13 @@ import * as db from './store.js'
 import * as cart from './cart.js'
 import * as auth from './auth.js'
 import { filterDishes } from './search.js'
+import {
+  cartEmptyHtml,
+  cartLines,
+  cartSummaryHtml,
+  shipProgressHtml,
+  summarize,
+} from './cart-view.js'
 
 const $ = (sel) => document.querySelector(sel)
 const money = (n) => `${Number(n || 0).toLocaleString('vi-VN')}đ`
@@ -348,12 +355,28 @@ const resetFilter = () => {
 const ui = $('#ui-root')
 let lastFocused = null
 
-const toast = (message, tone = '') => {
+/* Toast nằm ngoài #ui-root để không bị xoá mỗi lần vẽ lại giỏ hàng. */
+const toastHost = document.createElement('div')
+toastHost.className = 'toast-host'
+document.body.append(toastHost)
+
+const toast = (message, tone = '', action = null) => {
   const node = document.createElement('div')
   node.className = `toast ${tone === 'err' ? 'is-err' : ''}`.trim()
   node.textContent = message
-  ui.append(node)
-  setTimeout(() => node.remove(), 3000)
+  if (action?.label) {
+    const btn = document.createElement('button')
+    btn.type = 'button'
+    btn.className = 'toast-action'
+    btn.textContent = action.label
+    btn.addEventListener('click', () => {
+      node.remove()
+      action.run()
+    })
+    node.append(btn)
+  }
+  toastHost.append(node)
+  setTimeout(() => node.remove(), action?.label ? 6000 : 3000)
 }
 
 const renderBadge = () => {
@@ -361,6 +384,10 @@ const renderBadge = () => {
   const total = cart.count()
   badge.textContent = String(total)
   badge.hidden = total === 0
+  if (total === 0) return
+  badge.classList.remove('is-bump')
+  void badge.offsetWidth
+  badge.classList.add('is-bump')
 }
 
 const closePanels = () => {
@@ -370,79 +397,76 @@ const closePanels = () => {
   lastFocused = null
 }
 
-const lineArt = (line) =>
-  line.image
-    ? `<img class="cart-line-art" src="${escape(line.image)}" alt="" loading="lazy" />`
-    : `<span class="cart-line-art is-emoji">${escape(line.emoji ?? '🍽️')}</span>`
+/* Thanh tiến trình + bảng tổng tiền dùng chung cho cả giỏ và form thanh toán. */
+const sumOf = (lines) =>
+  summarize(lines, { freeShipFrom: db.FREE_SHIP_FROM, shipFee: db.SHIP_FEE })
 
-const cartRows = () =>
-  cart
-    .list()
-    .map(
-      (line) => `
-      <div class="cart-line" data-key="${escape(line.key)}">
-        ${lineArt(line)}
-        <div class="cart-line-main">
-          <strong>${escape(line.name)}</strong>
-          <small>${money(line.price)} / món</small>
-        </div>
-        <div class="qty">
-          <button type="button" class="qty-btn" data-qty="-1" data-key="${escape(line.key)}" aria-label="Giảm số lượng ${escape(line.name)}">−</button>
-          <span>${line.qty}</span>
-          <button type="button" class="qty-btn" data-qty="1" data-key="${escape(line.key)}" aria-label="Tăng số lượng ${escape(line.name)}">+</button>
-        </div>
-        <span class="cart-line-total">${money(line.price * line.qty)}</span>
-        <button type="button" class="cart-remove" data-remove="${escape(line.key)}" aria-label="Xoá ${escape(line.name)}">✕</button>
-      </div>`,
-    )
-    .join('')
-
-const shipProgress = () => {
-  const sub = cart.subtotal()
-  if (sub <= 0) return ''
-  const pct = Math.min(100, Math.round((sub / db.FREE_SHIP_FROM) * 100))
-  const missing = cart.missingForFreeShip()
-  return `
-    <div class="ship-progress">
-      <div class="ship-bar"><span style="width:${pct}%"></span></div>
-      <p class="ship-text">${
-        missing > 0
-          ? `Mua thêm <b>${money(missing)}</b> để được miễn phí giao`
-          : '🎉 Đơn hàng này được <b>miễn phí giao</b>'
-      }</p>
-    </div>`
+const focusQtyBtn = (key, delta) => {
+  const same = [...ui.querySelectorAll('[data-qty]')].filter((btn) => btn.dataset.key === key)
+  const target =
+    same.find((btn) => Number(btn.dataset.qty) === delta && !btn.disabled) ??
+    same.find((btn) => !btn.disabled)
+  target?.focus()
 }
 
-const openCart = () => {
-  lastFocused = document.activeElement
+/**
+ * Vẽ lại ngăn giỏ. `focus` giữ con trỏ ở đúng nút vừa bấm vì toàn bộ
+ * #ui-root bị thay mới, và vị trí cuộn cũng bị đưa về đầu nếu không khôi phục.
+ */
+const renderCart = (focus = null) => {
   const lines = cart.list()
+  const sum = sumOf(lines)
+  const scrollTop = ui.querySelector('.cart-body')?.scrollTop ?? 0
+
   ui.innerHTML = `
     <div class="drawer-backdrop" data-close="1"></div>
     <aside class="cart-drawer" role="dialog" aria-modal="true" aria-label="Giỏ hàng">
       <header class="cart-head">
-        <h2>Giỏ hàng ${lines.length ? `<small>${cart.count()} món</small>` : ''}</h2>
+        <h2>Giỏ hàng ${
+          sum.kinds ? `<small>${sum.count} món · ${sum.kinds} loại</small>` : ''
+        }</h2>
         <button type="button" class="icon-btn" data-close="1" aria-label="Đóng">✕</button>
       </header>
       <div class="cart-body">
-        ${lines.length ? cartRows() : ''}
+        ${sum.kinds ? cartLines(lines, { maxQty: cart.MAX_QTY }) : cartEmptyHtml()}
       </div>
       <footer class="cart-foot">
-        ${shipProgress()}
+        ${shipProgressHtml({ ...sum, freeShipFrom: db.FREE_SHIP_FROM })}
         ${
-          lines.length
-            ? `<div class="cart-sum"><span>Tạm tính</span><b>${money(cart.subtotal())}</b></div>
-               <div class="cart-sum"><span>Giao hàng</span><b>${
-                 cart.shipping() ? money(cart.shipping()) : 'Miễn phí'
-               }</b></div>
-               <div class="cart-sum is-total"><span>Tổng cộng</span><b>${money(cart.total())}</b></div>
+          sum.kinds
+            ? `${cartSummaryHtml(sum)}
+               <p class="cart-hint">Tối đa ${cart.MAX_QTY} phần cho mỗi món. Bấm “Thanh toán” để hoàn tất đơn.</p>
                <button type="button" class="btn btn-primary btn-block" data-action="checkout">Thanh toán</button>
                <button type="button" class="btn btn-ghost btn-block" data-action="clear-cart">Xoá giỏ</button>`
-            : `<p class="cart-empty">Giỏ hàng đang trống.</p>
-               <button type="button" class="btn btn-primary btn-block" data-action="browse-menu">Xem thực đơn</button>`
+            : `<button type="button" class="btn btn-primary btn-block" data-action="browse-menu">Xem thực đơn</button>`
         }
       </footer>
     </aside>`
+
+  const body = ui.querySelector('.cart-body')
+  if (body) body.scrollTop = scrollTop
+  if (focus) focusQtyBtn(focus.key, focus.delta)
   document.body.style.overflow = 'hidden'
+}
+
+const openCart = () => {
+  lastFocused = document.activeElement
+  renderCart()
+}
+
+/** Bỏ một dòng rồi cho khách hoàn tác được nếu bấm nhầm. */
+const dropLine = (line) => {
+  cart.remove(line.key)
+  renderBadge()
+  renderCart()
+  toast(`Đã bỏ ${line.name} khỏi giỏ`, '', {
+    label: 'Hoàn tác',
+    run: () => {
+      cart.add(line.key, line.qty)
+      renderBadge()
+      renderCart()
+    },
+  })
 }
 
 const openCheckout = () => {
@@ -450,6 +474,7 @@ const openCheckout = () => {
   const user = auth.getUser()
   const lines = cart.list()
   if (!lines.length) return toast('Giỏ hàng đang trống', 'err')
+  const sum = sumOf(lines)
   ui.innerHTML = `
     <div class="drawer-backdrop" data-close="1"></div>
     <div class="modal-backdrop-cart">
@@ -477,10 +502,10 @@ const openCheckout = () => {
               <textarea name="note"></textarea>
             </label>
             <div class="sheet-lines">
-              ${cartRows()}
+              ${cartLines(lines, { maxQty: cart.MAX_QTY, editable: false })}
             </div>
             <p class="form-error" id="checkoutError" role="alert" hidden></p>
-            <div class="cart-sum is-total"><span>Tổng cộng</span><b>${money(cart.total())}</b></div>
+            ${cartSummaryHtml(sum)}
           </div>
           <div class="sheet-foot">
             <button type="submit" class="btn btn-primary btn-block">Đặt món</button>
@@ -594,26 +619,37 @@ document.addEventListener('click', (event) => {
 
   const addBtn = event.target.closest('[data-add]')
   if (addBtn) {
-    const result = cart.add(addBtn.dataset.add, 1)
+    const key = addBtn.dataset.add
+    const capped = cart.qtyOf(key) + 1 >= cart.MAX_QTY
+    const result = cart.add(key, 1)
     if (result.error) return toast('Không thêm được món này', 'err')
     renderBadge()
-    return toast('Đã thêm vào giỏ')
+    return toast(capped ? `Tối đa ${cart.MAX_QTY} phần cho mỗi món` : 'Đã thêm vào giỏ')
   }
 
   const qtyBtn = event.target.closest('[data-qty]')
   if (qtyBtn) {
-    const line = cart.list().find((l) => l.key === qtyBtn.dataset.key)
-    if (!line) return undefined
-    cart.setQty(qtyBtn.dataset.key, line.qty + Number(qtyBtn.dataset.qty))
+    const key = qtyBtn.dataset.key
+    const delta = Number(qtyBtn.dataset.qty)
+    const result = cart.changeQty(key, delta)
+    if (result.error) return toast('Không cập nhật được số lượng', 'err')
+
+    if (result.removed) {
+      /* Giảm từ 1 xuống 0 = bỏ món, nên cũng cho hoàn tác như nút xoá. */
+      return dropLine({ key, name: result.name, qty: result.qty })
+    }
+
     renderBadge()
-    return openCart()
+    renderCart({ key, delta })
+    if (result.atMax) return toast(`Tối đa ${cart.MAX_QTY} phần cho mỗi món`)
+    return undefined
   }
 
   const removeBtn = event.target.closest('[data-remove]')
   if (removeBtn) {
-    cart.remove(removeBtn.dataset.remove)
-    renderBadge()
-    return openCart()
+    const line = cart.list().find((l) => l.key === removeBtn.dataset.remove)
+    if (!line) return undefined
+    return dropLine(line)
   }
 
   const authBtn = event.target.closest('[data-auth]')
@@ -628,9 +664,18 @@ document.addEventListener('click', (event) => {
     if (action === 'open-cart') return openCart()
     if (action === 'checkout') return openCheckout()
     if (action === 'clear-cart') {
+      const snapshot = cart.list().map((line) => ({ key: line.key, qty: line.qty }))
       cart.clear()
       renderBadge()
-      return openCart()
+      renderCart()
+      return toast('Đã xoá toàn bộ giỏ hàng', '', {
+        label: 'Hoàn tác',
+        run: () => {
+          snapshot.forEach((line) => cart.add(line.key, line.qty))
+          renderBadge()
+          renderCart()
+        },
+      })
     }
     if (action === 'browse-menu') {
       closePanels()
