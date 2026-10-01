@@ -43,10 +43,23 @@ globalThis.localStorage = STORAGE
 if (!globalThis.crypto?.subtle) globalThis.crypto = webcrypto
 
 /**
- * store.js chỉ được nạp MỘT lần cho cả file test, nên các test chỉ cần
- * xoá localStorage + nạp lại danh sách món thay vì cache-bust module.
+ * store.js chỉ được nạp MỘT lần cho cả file test.
+ * cart.js import './store.js' không có query nên nếu store bị cache-bust
+ * theo query, cart sẽ trỏ sang instance store khác và luôn trả 'not-found'.
+ * Vì vậy chỉ cart.js được cache-bust, còn store dùng chung instance này.
  */
 export const store = await import('../src/store.js')
+
+let round = 0
+
+export const freshModules = async () => {
+  STORAGE.clear()
+  store.resetDishes()
+  round += 1
+  const cart = await import(`../src/cart.js?r=${round}`)
+  cart.clear()
+  return { store, cart }
+}
 
 export const freshSeed = async () => {
   STORAGE.clear()

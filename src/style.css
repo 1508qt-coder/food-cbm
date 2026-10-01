@@ -1540,17 +1540,245 @@ body.modal-open {
 }
 
 
-/* Lớp phủ cho hộp thoại đăng nhập: chỉ tối nền, KHÔNG blur
-   (blur phủ cả màn hình và nuốt click trên vài cấu hình). */
-.sheet-backdrop {
+/* Lớp phủ dùng chung cho giỏ hàng và hộp thoại.
+   NGĂN GIỎ VÀ LỚP PHỦ LÀ HAI ELEMENT ANH EM, không lồng nhau:
+   - .cart-scrim chỉ tối nền, KHÔNG dùng backdrop-filter (blur sẽ phủ
+     cả ngăn giỏ và làm mờ toàn màn hình).
+   - .cart-drawer đứng sau trong DOM nên vẽ lên trên lớp phủ, không cần
+     z-index cao hơn, nên cú click trong giỏ không bị lớp phủ nuốt.
+   - .cart-drawer không có animation translateX: nếu animation bị treo
+     (prefers-reduced-motion, tab nền, thiết bị yếu) thì ngăn giỏ vẫn
+     nằm đúng chỗ và bấm được. */
+.cart-layer {
   position: fixed;
   inset: 0;
-  z-index: 90;
+  z-index: 80;
+}
+
+.cart-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(43, 33, 28, 0.45);
+  animation: fade-in 0.18s ease;
+}
+
+.cart-scrim.is-center {
   display: grid;
   place-items: center;
   padding: 20px;
   overflow-y: auto;
-  background: rgba(43, 33, 28, 0.5);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.cart-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(420px, 100%);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  box-shadow: -16px 0 40px -16px rgba(43, 33, 28, 0.45);
+}
+
+.cart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cart-head h2 {
+  font-size: 21px;
+}
+
+.cart-head h2 small {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cart-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 20px;
+}
+
+.cart-line {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.cart-line-art {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--brand-soft);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.cart-line-art.is-emoji {
+  font-size: 24px;
+}
+
+.cart-line-main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cart-line-main strong {
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.cart-line-main small {
+  opacity: 0.7;
+  font-size: 13px;
+}
+
+.cart-line-total {
+  color: var(--ink);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.cart-empty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 40px 12px;
+  text-align: center;
+  color: var(--text);
+  opacity: 0.9;
+}
+
+.cart-empty p {
+  margin: 0;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cart-empty small {
+  max-width: 240px;
+}
+
+.cart-empty-mark {
+  font-size: 44px;
+  line-height: 1;
+}
+
+.qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+}
+
+.qty.is-static {
+  padding-inline: 12px;
+  background: transparent;
+}
+
+.qty span {
+  min-width: 26px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.qty-btn {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.qty-btn:hover:not([disabled]) {
+  background: var(--brand);
+  color: #fff;
+}
+
+.qty-btn[disabled] {
+  cursor: not-allowed;
+  opacity: 0.45;
+  background: var(--border);
+  color: var(--text);
+}
+
+.cart-remove {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--text);
+  font-size: 15px;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.cart-remove:hover {
+  color: var(--brand);
+  opacity: 1;
+  background: var(--brand-soft);
+}
+
+.cart-foot {
+  display: grid;
+  gap: 8px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--card);
+}
+
+.cart-sum {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+}
+
+.cart-sum.is-total {
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.cart-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--brand-dark);
+  background: var(--brand-soft);
+  padding: 8px 12px;
+  border-radius: 10px;
 }
 
 .sheet-head {
@@ -1583,6 +1811,40 @@ body.modal-open {
   color: var(--brand);
 }
 
+
+.btn-cart {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cart-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.order-btn {
+  cursor: pointer;
+}
+
+.order-btn:hover:not([disabled]) {
+  transform: translateY(-2px);
+}
+
+.order-btn[disabled] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
 
 .btn-block {
   width: 100%;
@@ -1667,6 +1929,39 @@ body.modal-open {
   color: #b3261e;
   font-size: 14px;
   font-weight: 600;
+}
+
+.sheet-lines {
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+
+.sheet.is-success {
+  padding: 26px 22px;
+  text-align: center;
+  display: grid;
+  gap: 10px;
+}
+
+.success-mark {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--green);
+  color: #fff;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.sheet-foot {
+  display: grid;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--card);
 }
 
 
@@ -1986,6 +2281,51 @@ body.modal-open {
     padding-inline: 16px;
   }
 
+  .cart-head,
+  .cart-foot {
+    padding: 14px 16px;
+  }
+
+  .cart-body {
+    padding-inline: 16px;
+  }
+
+  .cart-drawer {
+    width: 100%;
+  }
+
+  /* Dòng món xuống 2 hàng thay vì 5 cột bị bóp trên màn hình hẹp */
+  .cart-line {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      'art info remove'
+      'art qty  price';
+    gap: 6px 10px;
+  }
+
+  .cart-line-art {
+    grid-area: art;
+  }
+
+  .cart-line-main {
+    grid-area: info;
+  }
+
+  .cart-line .qty {
+    grid-area: qty;
+    justify-self: start;
+  }
+
+  .cart-line-total {
+    grid-area: price;
+    align-self: center;
+    text-align: right;
+  }
+
+  .cart-remove {
+    grid-area: remove;
+  }
+
   .toast-host {
     left: 16px;
     right: 16px;
@@ -2029,6 +2369,17 @@ body.modal-open {
     font-size: 13.5px;
   }
 
+  .cart-line {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      'art  info'
+      'qty  price'
+      'remove remove';
+  }
+
+  .cart-remove {
+    justify-self: end;
+  }
 }
 
 /* ----- Vùng chạm trên thiết bị cảm ứng: mục tiêu tối thiểu 44px ----- */
@@ -2041,6 +2392,21 @@ body.modal-open {
   .search-clear {
     width: 32px;
     height: 32px;
+  }
+
+  .qty-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 20px;
+  }
+
+  .qty span {
+    min-width: 32px;
+  }
+
+  .cart-remove {
+    width: 44px;
+    height: 44px;
   }
 
   /* Các phần tử sau đây thấp hơn 40px nên khó bấm trên điện thoại */
