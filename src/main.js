@@ -71,13 +71,9 @@ const shell = () => `
   </div>
 </header>
 
-<!-- Giỏ hàng không nằm trong dòng trang nữa: nó trượt từ phải, phủ một
-     lớp mờ toàn màn hình. Lớp phủ z-index thấp hơn nên chỉ nhận cú click đóng,
-     mọi cú click trong giỏ vẫn rơi vào sidebar. -->
-<div id="cartOverlay" class="cart-overlay" data-action="close-cart" hidden></div>
-
-<aside id="cart" class="cart-sidebar" role="dialog" aria-modal="true"
-  aria-labelledby="cartTitle" hidden>
+<!-- Giỏ trượt từ phải nhưng không có lớp phủ, nên khi nó đang mở khách
+     vẫn bấm thêm món, tìm kiếm và cuộn trang bình thường. -->
+<aside id="cart" class="cart-sidebar" aria-labelledby="cartTitle" hidden>
   <div class="cart-sidebar-head">
     <div class="cart-sidebar-title">
       <p class="eyebrow">Đơn của bạn</p>
@@ -388,7 +384,7 @@ const toast = (message, tone = '') => {
 
 const closePanels = () => {
   ui.innerHTML = ''
-  syncScrollLock()
+  document.body.style.overflow = ''
   lastFocused?.focus?.()
   lastFocused = null
 }
@@ -402,22 +398,26 @@ const renderBadge = () => {
 
 /* =========================
    GIỎ HÀNG
-   Giỏ là một hộp thoại trượt từ phải kèm lớp phủ mờ. Lớp phủ nằm dưới
-   sidebar nên nhấn vào vùng tối sẽ đóng giỏ, còn mọi thao tác trong giỏ
-   không bị chặn.
+   Giỏ trượt từ phải, không có lớp phủ và không khoá cuộn, nên khách vẫn
+   chọn món, tìm kiếm, cuộn trang trong lúc giỏ đang mở.
 ========================= */
 
 const cartPanel = $('#cart')
-const cartOverlay = $('#cartOverlay')
 const cartBody = $('#cartBody')
 let cartReturnFocus = null
 
-/* Khóa cuộn trang khi hộp thoại đang mở. Cả đăng nhập và giỏ đều dùng
-   chung một trạng thái để không mở hai thứ cùng lúc. */
-const syncScrollLock = () => {
-  const locked = state.cartOpen || Boolean(ui.innerHTML)
-  document.body.style.overflow = locked ? 'hidden' : ''
+/* Giỏ bám dưới header nên phải biết header cao bao nhiêu. Header cao khác
+   nhau ở từng breakpoint (73px / 159px / 117px) và còn đổi khi webfont tải
+   tới, nên dùng ResizeObserver thay vì chỉ đo một lần lúc khởi động. */
+const syncHeaderHeight = () => {
+  const header = document.querySelector('.site-header')
+  if (!header) return
+  document.documentElement.style.setProperty('--header-h', `${Math.ceil(header.offsetHeight)}px`)
 }
+
+new ResizeObserver(syncHeaderHeight).observe(document.querySelector('.site-header'))
+window.addEventListener('resize', syncHeaderHeight)
+syncHeaderHeight()
 
 const checkoutFormHtml = () => {
   const user = auth.getUser()
@@ -484,11 +484,9 @@ const renderCart = () => {
 
 const showCart = () => {
   cartReturnFocus = document.activeElement
-  cartOverlay.hidden = false
   cartPanel.hidden = false
   state.cartOpen = true
   state.checkout = false
-  syncScrollLock()
   renderCart()
   cartBody.scrollTop = 0
   cartPanel.querySelector('.cart-sidebar-close')?.focus()
@@ -496,11 +494,9 @@ const showCart = () => {
 
 const hideCart = ({ restoreFocus = true } = {}) => {
   if (!state.cartOpen) return
-  cartOverlay.hidden = true
   cartPanel.hidden = true
   state.cartOpen = false
   state.checkout = false
-  syncScrollLock()
   if (restoreFocus) cartReturnFocus?.focus?.()
   cartReturnFocus = null
 }
@@ -788,24 +784,6 @@ document.addEventListener('keydown', (event) => {
   if (state.query) {
     resetFilter()
     searchInput.focus()
-  }
-})
-
-/* Giỏ là hộp thoại modal nên Tab phải giữ bên trong nó, không chạy ra
-   nút bấm phía sau lớp phủ. */
-document.addEventListener('keydown', (event) => {
-  if (event.key !== 'Tab' || !state.cartOpen) return
-  const focusable = [...cartPanel.querySelectorAll('button:not([disabled]), input, textarea, a[href]')]
-    .filter((el) => el.offsetParent !== null)
-  if (!focusable.length) return
-  const first = focusable[0]
-  const last = focusable[focusable.length - 1]
-  if (event.shiftKey && document.activeElement === first) {
-    event.preventDefault()
-    last.focus()
-  } else if (!event.shiftKey && document.activeElement === last) {
-    event.preventDefault()
-    first.focus()
   }
 })
 

@@ -1254,36 +1254,26 @@ svg {
    nên không có gì che giỏ và không có gì làm mờ màn hình.
    ======================================================= */
 
-/* Lớp phủ phủ kín màn hình để báo hiệu có hộp thoại đang mở. z-index thấp
-   hơn sidebar nên nó chỉ nhận cú click đóng, không nuốt cú click trong giỏ. */
-.cart-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 998;
-}
-
+/* Giỏ trượt từ phải, không có lớp phủ nên trang vẫn bấm và cuộn được.
+   Bám ngay dưới header nên nút giỏ trên header vẫn dùng được, và
+   --header-h do JS đo vì header cao khác nhau ở từng breakpoint. */
 .cart-sidebar {
   position: fixed;
   right: 0;
-  top: 0;
-  z-index: 999;
+  top: var(--header-h, 73px);
+  z-index: 90;
   display: flex;
   flex-direction: column;
   width: min(440px, 100vw);
-  height: 100vh;
-  height: 100dvh;
+  height: calc(100vh - var(--header-h, 73px));
+  height: calc(100dvh - var(--header-h, 73px));
   background: var(--card);
-  box-shadow: -24px 0 60px rgba(40, 20, 10, .22);
+  border-left: 1px solid var(--border);
+  box-shadow: -18px 0 48px rgba(40, 20, 10, .16);
   animation: cartSlideIn .26s ease;
 }
 
-.cart-overlay:not([hidden]) {
-  animation: cartFadeIn .26s ease;
-}
-
-.cart-sidebar[hidden],
-.cart-overlay[hidden] {
+.cart-sidebar[hidden] {
   display: none;
 }
 
@@ -1293,16 +1283,9 @@ svg {
   }
 }
 
-@keyframes cartFadeIn {
-  from {
-    opacity: 0;
-  }
-}
-
 /* Cú trượt cả tấm giỏ dễ gây khó chịu cho người nhạy cảm thị giác */
 @media (prefers-reduced-motion: reduce) {
-  .cart-sidebar,
-  .cart-overlay:not([hidden]) {
+  .cart-sidebar {
     animation: none;
   }
 }
@@ -2115,8 +2098,22 @@ svg {
     font-size: 13.5px;
   }
 
+  /* Trên máy hẹp, bộ đếm số lượng (tối thiểu ~100px) và tổng tiền không
+     đủ chỗ đứng cạnh nhau trong một dòng. Nếu ép chúng cùng hàng, bộ đếm
+     tràn sang cột tổng tiền và bị .cart-line-total vẽ đè lên, khiến nút
+     "+" không bấm được. Tổng tiền xuống hàng riêng, chiếm hết bề ngang. */
+  .cart-line {
+    grid-template-areas:
+      'art main   main   remove'
+      'art qty    qty    remove'
+      'art total  total  remove';
+  }
+
   .cart-line-total {
     min-width: 0;
+    margin-top: -2px;
+    color: var(--brand-dark);
+    font-size: 15px;
   }
 }
 
