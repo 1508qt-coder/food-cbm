@@ -1772,12 +1772,15 @@ svg {
   animation: toast-in 0.2s ease;
 }
 
-/* Nhiều toast cùng lúc thì xếp chồng lên nhau. */
+/* Nhiều toast cùng lúc thì xếp chồng lên nhau. z-index phải cao hơn cả lớp
+   phủ (998) lẫn sidebar giỏ (999), nếu không phần báo "đã thêm", "đã bỏ"…
+   sẽ bị làm mờ khi giỏ đang mở, và biến mất hẳn trên màn hình hẹp vì
+   sidebar phủ kín chiều rộng. */
 .toast-host {
   position: fixed;
   left: 50%;
   bottom: 26px;
-  z-index: 90;
+  z-index: 1000;
   transform: translateX(-50%);
   display: grid;
   gap: 8px;
