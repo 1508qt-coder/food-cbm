@@ -184,7 +184,26 @@ svg {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.brand-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  object-fit: cover;
+  display: block;
+  background: #fdf9f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  flex-shrink: 0;
+}
+
+.brand:hover .brand-logo {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(232, 84, 45, 0.2);
 }
 
 .brand-mark {
@@ -2046,11 +2065,14 @@ body.modal-open {
 
   /* Header dính chiếm 26% màn hình điện thoại nếu giữ độ cao cũ,
      nên thu gọn lại cho vừa chừa chỗ xem món ăn. */
-  .brand-mark {
-    width: 32px;
-    height: 32px;
-    font-size: 13px;
+  .brand-mark,
+  .brand-logo {
+    width: 34px;
+    height: 34px;
     border-radius: 10px;
+  }
+  .brand-mark {
+    font-size: 13px;
   }
 
   .brand-name {
@@ -2308,9 +2330,13 @@ body.modal-open {
     font-size: 16px;
   }
 
+  .brand-mark,
+  .brand-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
   .brand-mark {
-    width: 34px;
-    height: 34px;
     font-size: 14px;
   }
 

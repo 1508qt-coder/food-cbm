@@ -35,10 +35,17 @@
   text-decoration: none;
 }
 
-.side-brand .brand-mark {
+.side-brand .brand-mark,
+.side-brand .side-logo {
   width: 40px;
   height: 40px;
   border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: block;
+}
+
+.side-brand .brand-mark {
   background: var(--brand);
   color: #fff;
   display: grid;
@@ -575,6 +582,17 @@
   display: grid;
   place-items: center;
   font-weight: 800;
+}
+
+.gate-logo {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  object-fit: cover;
+  display: block;
+  margin-inline: auto;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  background: #fdf9f0;
 }
 
 .gate-box h1 {

@@ -24,7 +24,7 @@ const shell = () => `
   <div class="container header-inner">
 
     <a href="#home" class="brand">
-      <span class="brand-mark">CBM</span>
+      <img src="/logo.png" alt="CBM FOOD" class="brand-logo" />
       <span class="brand-name">CBM FOOD</span>
     </a>
 
@@ -216,7 +216,7 @@ const shell = () => `
   <div class="container footer-grid">
     <div class="footer-brand">
       <a href="#home" class="brand">
-        <span class="brand-mark">CBM</span>
+        <img src="/logo.png" alt="CBM FOOD" class="brand-logo" />
         <span class="brand-name">CBM FOOD</span>
       </a>
       <p>Ăn ngon, giao nhanh mỗi ngày. Cùng CBM để bạn tin tưởng lựa chọn.</p>
