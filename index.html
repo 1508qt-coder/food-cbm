@@ -7,5 +7,198 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>CBM FOOD - Đồ Ăn Ngon Mỗi Ngày</title>
   </head>
+
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="#" class="brand">
+          <span class="brand-mark">CBM</span>
+          <span class="brand-name">CBM FOOD</span>
+        </a>
+        <nav class="main-nav" aria-label="Menu chính">
+          <a href="#home" class="active">Trang chủ</a>
+          <a href="#menu">Thực đơn</a>
+          <a href="#about">Giới thiệu</a>
+          <a href="#contact">Liên hệ</a>
+        </nav>
+        <a href="#menu" class="btn btn-primary">Đặt món</a>
+      </div>
+    </header>
+
+    <main>
+      <section id="home" class="hero">
+        <div class="container hero-grid">
+          <div class="hero-content">
+            <p class="eyebrow">Nhà hàng CBM FOOD</p>
+            <h1>Đồ ăn ngon,<br />giao tận nơi trong <em>30 phút</em></h1>
+            <p class="hero-sub">
+              Thực đơn tươi ngon mỗi ngày từ những nguyên liệu sạch, chế biến
+              bởi đầu bếp giàu kinh nghiệm. Đặt món ngay để nhận ưu đãi hấp dẫn.
+            </p>
+            <div class="hero-actions">
+              <a href="#menu" class="btn btn-primary btn-lg">Xem thực đơn</a>
+              <a href="#contact" class="btn btn-outline btn-lg">Gọi ngay</a>
+            </div>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <div class="hero-card hero-card-main">
+              <span class="plate">CBM</span>
+              <p>Bữa ăn ngon cho mọi nhà</p>
+            </div>
+            <div class="hero-card hero-card-mini">
+              <strong>4.9</strong>
+              <span>Đánh giá từ 12.000+ khách hàng</span>
+            </div>
+            <div class="hero-card hero-card-tag">
+              <strong>30'</strong>
+              <span>Giao nhanh</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="features">
+        <div class="container features-grid">
+          <div class="feature">
+            <span class="feature-icon feature-fast" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </span>
+            <div>
+              <h3>Giao trong 30 phút</h3>
+              <p>Shipper riêng, đổi trả miễn phí nếu trễ hẹn.</p>
+            </div>
+          </div>
+          <div class="feature">
+            <span class="feature-icon feature-leaf" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+            </span>
+            <div>
+              <h3>Nguyên liệu tươi sạch</h3>
+              <p>Chọn lọc từ nguồn cung uy tín mỗi sáng.</p>
+            </div>
+          </div>
+          <div class="feature">
+            <span class="feature-icon feature-wallet" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4Z"/></svg>
+            </span>
+            <div>
+              <h3>Giá tốt nhất</h3>
+              <p>Ưu đãi hoàn tiền, mã giảm giá mỗi tuần.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="menu" class="menu">
+        <div class="container">
+          <div class="section-head">
+            <p class="eyebrow">Thực đơn hôm nay</p>
+            <h2>Món ăn được yêu thích</h2>
+            <p>Những món ăn tiêu biểu được khách hàng chọn nhiều nhất.</p>
+          </div>
+          <!-- Filter tabs — populated by menu.js -->
+          <div class="category-tabs" id="category-tabs" role="tablist" aria-label="Lọc theo danh mục">
+            <button class="cat-tab active" data-category="all" role="tab" aria-selected="true" id="tab-all">
+              🍽️ Tất cả
+            </button>
+          </div>
+
+          <!-- Dish cards — rendered by menu.js -->
+          <div class="dish-grid" id="dish-grid" aria-live="polite">
+            <!-- Loading skeleton -->
+            <div class="dish dish-skeleton"></div>
+            <div class="dish dish-skeleton"></div>
+            <div class="dish dish-skeleton"></div>
+          </div>
+
+          <!-- Empty state -->
+          <p class="menu-empty" id="menu-empty" hidden>Không tìm thấy món ăn nào.</p>
+        </div>
+      </section>
+
+      <section id="about" class="about">
+        <div class="container about-grid">
+          <div class="about-art" aria-hidden="true">
+            <div class="about-phone">
+              <span class="about-count">12.000+</span>
+              <span class="about-label">Đơn hàng đã giao</span>
+            </div>
+            <div class="about-phone">
+              <span class="about-count">15</span>
+              <span class="about-label">Năm kinh nghiệm</span>
+            </div>
+            <div class="about-phone">
+              <span class="about-count">50+</span>
+              <span class="about-label">Món ăn trong thực đơn</span>
+            </div>
+          </div>
+          <div class="about-content">
+            <p class="eyebrow">Về chúng tôi</p>
+            <h2>Chuẩn vị truyền thống, hiện đại trong từng chi tiết</h2>
+            <p>
+              CBM FOOD được thành lập với mong muốn mang những món ăn Việt Nam
+              thơm ngon, đậm đà đến bàn ăn của mọi gia đình. Mỗi món ăn đều được
+              kiểm soát chất lượng nghiêm ngặt từ khâu nguyên liệu đến khâu trình
+              bày.
+            </p>
+            <p>
+              Đội ngũ đầu bếp của chúng tôi luôn đổi mới thực đơn theo mùa, đảm
+              bảo sự đa dạng và mới mẻ cho khách hàng.
+            </p>
+            <a href="#menu" class="btn btn-primary">Khám phá thực đơn</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="contact" class="cta">
+        <div class="container cta-box">
+          <h2>Sẵn sàng thưởng thức món ngon?</h2>
+          <p>Gọi ngay hoặc đặt món trực tuyến, chúng tôi sẽ giao đến bạn trong 30 phút.</p>
+          <div class="hero-actions">
+            <a href="tel:19001234" class="btn btn-light btn-lg">Gọi 1900 1234</a>
+            <a href="#menu" class="btn btn-outline-light btn-lg">Đặt món online</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="brand">
+            <span class="brand-mark">CBM</span>
+            <span class="brand-name">CBM FOOD</span>
+          </a>
+          <p>Đồ ăn ngon, giao nhanh mỗi ngày. Cảm ơn bạn đã tin tưởng lựa chọn CBM.</p>
+        </div>
+        <nav class="footer-col" aria-label="Liên kết nhanh">
+          <h4>Liên kết</h4>
+          <a href="#home">Trang chủ</a>
+          <a href="#menu">Thực đơn</a>
+          <a href="#about">Giới thiệu</a>
+          <a href="#contact">Liên hệ</a>
+        </nav>
+        <div class="footer-col">
+          <h4>Liên hệ</h4>
+          <p>123 Đường Lê Lợi, Quận 1, TP.HCM</p>
+          <p>Hotline: 1900 1234</p>
+          <p>Email: hotro@cbmfood.vn</p>
+        </div>
+        <div class="footer-col">
+          <h4>Giờ mở cửa</h4>
+          <p>Thứ 2 - Chủ nhật</p>
+          <p>08:00 - 22:00</p>
+        </div>
+      </div>
+      <div class="container footer-bottom">
+        <p>© 2026 CBM FOOD. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
+=======
   <body><div id="app"></div><script type="module" src="/src/main.js"></script></body>
 </html>
+
