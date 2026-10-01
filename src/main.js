@@ -71,6 +71,22 @@ const shell = () => `
   </div>
 </header>
 
+<!-- Giỏ hàng nằm ngay dưới đầu trang, trong dòng trang: không lớp phủ,
+     không position:fixed, không z-index, nên không thể bị làm mờ hay che
+     mất cú click. -->
+<section id="cart" class="cart-panel" aria-labelledby="cartTitle" hidden>
+  <div class="container">
+    <div class="cart-panel-head">
+      <div>
+        <p class="eyebrow">Đơn của bạn</p>
+        <h2 id="cartTitle">Giỏ hàng</h2>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" data-action="close-cart">Ẩn giỏ</button>
+    </div>
+    <div id="cartBody"></div>
+  </div>
+</section>
+
 <main>
 
 <section id="home" class="hero">
@@ -176,19 +192,6 @@ const shell = () => `
 
 <!-- Giỏ hàng nằm ngay trong dòng trang: không lớp phủ, không position:fixed,
      không z-index, nên không thể bị làm mờ hay che mất cú click. -->
-<section id="cart" class="cart-panel" aria-labelledby="cartTitle" hidden>
-  <div class="container">
-    <div class="cart-panel-head">
-      <div>
-        <p class="eyebrow">Đơn của bạn</p>
-        <h2 id="cartTitle">Giỏ hàng</h2>
-      </div>
-      <button type="button" class="btn btn-ghost btn-sm" data-action="close-cart">Ẩn giỏ</button>
-    </div>
-    <div id="cartBody"></div>
-  </div>
-</section>
-
 <section id="about" class="about">
   <div class="container about-grid">
     <div class="about-art">
@@ -405,6 +408,17 @@ const renderBadge = () => {
 const cartPanel = $('#cart')
 const cartBody = $('#cartBody')
 
+/* Header dính cao khác nhau theo breakpoint, nên đo thật rồi đưa vào
+   --header-h. Nhờ vậy cuộn tới giỏ luôn dừng ngay dưới header, không bị đè. */
+const syncHeaderHeight = () => {
+  const header = document.querySelector('.site-header')
+  if (!header) return
+  document.documentElement.style.setProperty('--header-h', `${Math.ceil(header.offsetHeight)}px`)
+}
+
+window.addEventListener('resize', syncHeaderHeight)
+syncHeaderHeight()
+
 const checkoutFormHtml = () => {
   const user = auth.getUser()
   return `
@@ -440,22 +454,32 @@ const renderCart = () => {
   const ship = cart.shipping(sub)
 
   if (!lines.length) {
-    cartBody.innerHTML = cartEmptyHtml()
+    cartBody.innerHTML = `
+      ${cartEmptyHtml()}
+      <div class="cart-actions is-center">
+        <button type="button" class="btn btn-primary" data-action="browse-menu">Xem thực đơn</button>
+      </div>`
     return
   }
 
-  cartBody.innerHTML = `
-    ${state.checkout
-      ? checkoutFormHtml()
-      : `${cartLinesHtml(lines, { maxQty: cart.MAX_QTY })}
-         <div class="cart-summary">
-           ${summaryHtml({ subtotal: sub, shipping: ship, total: sub + ship })}
-           <p class="cart-hint">Tối đa ${cart.MAX_QTY} phần cho mỗi món.</p>
-           <div class="cart-actions">
-             <button type="button" class="btn btn-primary" data-action="checkout">Thanh toán</button>
-             <button type="button" class="btn btn-ghost" data-action="clear-cart">Xoá giỏ</button>
-           </div>
-         </div>`}`
+  const summaryBlock = summaryHtml({ subtotal: sub, shipping: ship, total: sub + ship })
+
+  cartBody.innerHTML = state.checkout
+    ? `<div class="cart-review">
+         <h3 class="cart-review-title">Đơn của bạn</h3>
+         ${cartLinesHtml(lines, { editable: false })}
+         <div class="cart-review-total">${summaryBlock}</div>
+       </div>
+       ${checkoutFormHtml()}`
+    : `${cartLinesHtml(lines, { maxQty: cart.MAX_QTY })}
+       <div class="cart-summary">
+         ${summaryBlock}
+         <p class="cart-hint">Tối đa ${cart.MAX_QTY} phần cho mỗi món.</p>
+         <div class="cart-actions">
+           <button type="button" class="btn btn-primary" data-action="checkout">Thanh toán</button>
+           <button type="button" class="btn btn-ghost" data-action="clear-cart">Xoá giỏ</button>
+         </div>
+       </div>`
 }
 
 const showCart = () => {
@@ -623,6 +647,10 @@ document.addEventListener('click', (event) => {
       renderBadge()
       renderCart()
       return toast('Đã xoá toàn bộ giỏ hàng')
+    }
+    if (action === 'browse-menu') {
+      document.querySelector('#menu')?.scrollIntoView({ behavior: 'smooth' })
+      return undefined
     }
     if (action === 'logout') {
       auth.logout()

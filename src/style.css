@@ -1563,7 +1563,9 @@ body.modal-open {
   padding: 56px 0;
   border-top: 1px solid var(--border);
   background: var(--card);
-  scroll-margin-top: 90px;
+  /* --header-h do JS đo, vì header dính cao khác nhau ở từng breakpoint
+     (73px / 159px / 117px). Dùng số cứng sẽ bị header đè lên đầu giỏ. */
+  scroll-margin-top: calc(var(--header-h, 73px) + 12px);
 }
 
 .cart-panel[hidden] {
@@ -1680,6 +1682,34 @@ body.modal-open {
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 8px;
+}
+
+.cart-actions.is-center {
+  justify-content: center;
+  margin-top: 0;
+}
+
+/* Bước thanh toán vẫn phải thấy món và tổng tiền đang mua */
+.cart-review {
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg);
+  display: grid;
+  gap: 4px;
+}
+
+.cart-review-title {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.cart-review-total {
+  max-width: 420px;
+  margin: 12px 0 0 auto;
+  width: 100%;
+  display: grid;
+  gap: 8px;
 }
 
 .cart-form {
@@ -2306,7 +2336,8 @@ body.modal-open {
     font-size: 26px;
   }
 
-  .cart-summary {
+  .cart-summary,
+  .cart-review-total {
     margin-inline: 0;
     max-width: none;
   }
