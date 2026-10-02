@@ -975,26 +975,9 @@ svg {
 
 
 /* =========================
-   MODAL
-   ========================= */
-
-.modal-backdrop {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: all 0.25s ease;
-}
-
-.modal-backdrop.show {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-
-
-/* =========================
    RESPONSIVE
    ========================= */
+
 
 @media (max-width: 768px) {
 

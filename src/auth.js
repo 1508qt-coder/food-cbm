@@ -62,23 +62,34 @@ const validPhone = (value) => {
 let users = read(USER_KEY, [])
 
 const seedAdminIfMissing = async () => {
-  if (users.some((u) => u.role === 'admin')) return
-  /* Salt phải là CÙNG một giá trị dùng để hash và để lưu.
-     Trước đây hash dùng salt cố định còn lưu salt ngẫu nhiên nên
-     mật khẩu admin không bao giờ khớp khi đăng nhập lại. */
+  const existing = users.find((u) => u.role === 'admin')
+
+  if (existing?.salt && existing?.hash) {
+    /* Bản cũ từng hash bằng salt cố định nhưng lại lưu salt ngẫu nhiên, nên
+       mật khẩu admin không bao giờ khớp khi đăng nhập lại. Tài khoản như vậy
+       không tự hồi phục và cũng không vào được trang quản trị để bấm khôi phục
+       dữ liệu, nên ở đây tự kiểm tra và tạo lại nếu hỏng. */
+    try {
+      if ((await hashPassword(SEED_ADMIN.password, existing.salt)) === existing.hash) return
+    } catch {
+      return // Không kiểm tra được thì giữ nguyên, đừng xoá dữ liệu đang có.
+    }
+  }
+
+  /* Salt phải là CÙNG một giá trị dùng để hash và để lưu. */
   const salt = randomSalt()
-  users = [
-    {
-      id: SEED_ADMIN.id,
-      name: SEED_ADMIN.name,
-      email: SEED_ADMIN.email,
-      phone: SEED_ADMIN.phone,
-      role: 'admin',
-      salt,
-      hash: await hashPassword(SEED_ADMIN.password, salt),
-    },
-    ...users,
-  ]
+  const fresh = {
+    id: SEED_ADMIN.id,
+    name: SEED_ADMIN.name,
+    email: SEED_ADMIN.email,
+    phone: SEED_ADMIN.phone,
+    role: 'admin',
+    salt,
+    hash: await hashPassword(SEED_ADMIN.password, salt),
+  }
+  users = existing
+    ? users.map((u) => (u === existing ? fresh : u))
+    : [fresh, ...users]
   write(USER_KEY, users)
 }
 

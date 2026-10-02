@@ -528,10 +528,8 @@ const openAuth = (mode = 'login') => {
           </div>
         </div>
       </div>`
-    return
-  }
-
-  ui.innerHTML = `
+  } else {
+    ui.innerHTML = `
     <div class="sheet-backdrop" data-close>
       <div class="sheet" role="dialog" aria-modal="true">
         <header class="sheet-head>
@@ -564,7 +562,17 @@ const openAuth = (mode = 'login') => {
         </form>
       </div>
     </div>`
+  }
+
+  /* Cả hai nhánh đều là hộp thoại modal nên cùng khoá cuộn và cùng nhận focus.
+     Trước đây nhánh tài khoản `return` sớm nên bỏ qua cả hai, còn nhánh đăng
+     nhập thì focus nằm lại ở BODY: người dùng bàn phím Tab một cái là nhảy về
+     trang phía sau dù hộp thoại khai báo aria-modal. */
   document.body.style.overflow = 'hidden'
+  const target =
+    ui.querySelector('.sheet input:not([type="hidden"])') ??
+    ui.querySelector('.sheet button, .sheet a')
+  target?.focus()
 }
 
 const showAuthError = (message) => {
@@ -730,17 +738,22 @@ cartBody.addEventListener('submit', (event) => {
 })
 
 ui.addEventListener('submit', async (event) => {
-  if (event.target.id === 'authForm') {
-    event.preventDefault()
-    const data = new FormData(event.target)
-    showAuthError('')
-    const password = String(data.get('password') ?? '')
-    const email = String(data.get('email') ?? '')
+  if (event.target.id !== 'authForm') return
+  event.preventDefault()
+  const data = new FormData(event.target)
+  showAuthError('')
+  const password = String(data.get('password') ?? '')
+  const email = String(data.get('email') ?? '')
 
+  /* auth.hashPassword dựa vào crypto.subtle, chỉ có trong ngữ cảnh an toàn
+     (localhost hoặc HTTPS). Mở trang bằng IP trong mạng LAN thì hàm ném lỗi;
+     không bắt thì promise bị từ chối im lặng và người dùng thấy nút
+     "Đăng nhập" bấm không ăn. */
+  try {
     if (event.target.querySelector('[name="confirm"]')) {
       if (password !== String(data.get('confirm') ?? '')) {
         showAuthError('Mật khẩu nhập lại không khớp')
-        return
+        return undefined
       }
       const result = await auth.register({
         name: String(data.get('name') ?? ''),
@@ -757,6 +770,9 @@ ui.addEventListener('submit', async (event) => {
     const result = await auth.login({ email, password })
     if (result.error) return showAuthError(result.error)
     return afterLogin(result.user)
+  } catch (error) {
+    console.error('[CBM FOOD] Đăng nhập lỗi:', error)
+    return showAuthError(error?.message || 'Không đăng nhập được, vui lòng thử lại')
   }
 })
 
@@ -773,12 +789,15 @@ document.addEventListener('keydown', (event) => {
   }
 
   if (event.key !== 'Escape') return
-  if (state.cartOpen) {
-    hideCart()
-    return
-  }
+  /* Hộp thoại đăng nhập là modal nên phải đóng trước. Giờ giỏ không còn là
+     modal và hai thứ có thể mở cùng lúc, nếu kiểm tra giỏ trước thì Escape
+     chỉ đóng giỏ rồi bỏ mặc panel đăng nhập ở lại. */
   if (ui.innerHTML) {
     closePanels()
+    return
+  }
+  if (state.cartOpen) {
+    hideCart()
     return
   }
   if (state.query) {

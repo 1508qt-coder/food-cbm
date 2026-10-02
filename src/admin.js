@@ -513,16 +513,23 @@ el.gateForm.addEventListener('submit', async (event) => {
   event.preventDefault()
   showGateError('')
   const data = new FormData(el.gateForm)
-  const result = await auth.login({
-    email: String(data.get('email') ?? ''),
-    password: String(data.get('password') ?? ''),
-  })
-  if (result.error) return showGateError(result.error)
-  if (!auth.canAccessAdmin()) return showGateError('Tài khoản này không có quyền quản trị')
-  showAdmin(result.user)
-  toast(`Chào ${result.user.name}`)
-  fillCategoryOptions()
-  return render()
+  /* Bắt lỗi để khi crypto.subtle không có (mở bằng IP LAN chứ không phải
+     localhost/HTTPS) thì hiện thông báo thay vì im lặng không phản hồi. */
+  try {
+    const result = await auth.login({
+      email: String(data.get('email') ?? ''),
+      password: String(data.get('password') ?? ''),
+    })
+    if (result.error) return showGateError(result.error)
+    if (!auth.canAccessAdmin()) return showGateError('Tài khoản này không có quyền quản trị')
+    showAdmin(result.user)
+    toast(`Chào ${result.user.name}`)
+    fillCategoryOptions()
+    return render()
+  } catch (error) {
+    console.error('[CBM FOOD] Đăng nhập quản trị lỗi:', error)
+    return showGateError(error?.message || 'Không đăng nhập được, vui lòng thử lại')
+  }
 })
 
 el.logout.addEventListener('click', () => {
